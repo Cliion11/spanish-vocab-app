@@ -175,16 +175,22 @@ export default function SettingsPage() {
             </div>
 
             <select
-              value={settings.dailyGoal}
-              onChange={(event) =>
-                updateSetting("dailyGoal", Number(event.target.value))
-              }
-            >
-              <option value={10}>10 个单词</option>
-              <option value={20}>20 个单词</option>
-              <option value={30}>30 个单词</option>
-              <option value={50}>50 个单词</option>
-            </select>
+  value={settings.dailyGoal}
+  onChange={(event) =>
+    updateSetting("dailyGoal", Number(event.target.value))
+  }
+>
+  <option value={10}>10 个单词</option>
+  <option value={20}>20 个单词</option>
+  <option value={30}>30 个单词</option>
+  <option value={40}>40 个单词</option>
+  <option value={50}>50 个单词</option>
+  <option value={60}>60 个单词</option>
+  <option value={70}>70 个单词</option>
+  <option value={80}>80 个单词</option>
+  <option value={90}>90 个单词</option>
+  <option value={100}>100 个单词</option>
+</select>
           </div>
 
           <div className="setting-row">

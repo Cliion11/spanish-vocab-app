@@ -352,10 +352,11 @@ const words = useMemo(() => {
     }
 
     if (index + 1 >= words.length) {
-      setIsCompleted(true);
-      setShowAnswer(false);
-      return;
-    }
+  recordStudyStreak();
+  setIsCompleted(true);
+  setShowAnswer(false);
+  return;
+}
 
     setIndex(index + 1);
     setShowAnswer(false);
@@ -496,25 +497,25 @@ const words = useMemo(() => {
 
                 <p className="example">{currentWord.example}</p>
                 <p className="translation">{currentWord.translation}</p>
-                <p className="shortcut-hint">1 不认识 · 2 模糊 · 3 认识 · R 播放发音</p>
+                <p className="shortcut-hint">1 认识 · 2 模糊 · 3 不认识 · R 播放发音</p>
 
-                <div className="study-actions">
-                  <button type="button" onClick={() => handleAnswer("unknown")}>
-                    不认识
-                  </button>
+              <div className="study-actions">
+  <button
+    type="button"
+    className="primary-button"
+    onClick={() => handleAnswer("known")}
+  >
+    认识
+  </button>
 
-                  <button type="button" onClick={() => handleAnswer("unclear")}>
-                    模糊
-                  </button>
+  <button type="button" onClick={() => handleAnswer("unclear")}>
+    模糊
+  </button>
 
-                  <button
-                    type="button"
-                    className="primary-button"
-                    onClick={() => handleAnswer("known")}
-                  >
-                    认识
-                  </button>
-                </div>
+  <button type="button" onClick={() => handleAnswer("unknown")}>
+    不认识
+  </button>
+</div>
               </>
             )}
 

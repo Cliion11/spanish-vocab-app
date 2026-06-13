@@ -476,8 +476,9 @@ button:active,
   margin: 0;
   color: var(--text-main);
   font-size: clamp(44px, 7vw, 82px);
-  line-height: 0.98;
-  letter-spacing: -0.075em;
+  font-weight: 450;
+  line-height: 1.08;
+  letter-spacing: 0.02em;
 }
 
 .home-subtitle {

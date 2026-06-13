@@ -1,24 +1,44 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function Home() {
+  const [streak, setStreak] = useState(0);
+  const [dailyGoal, setDailyGoal] = useState(20);
+
+  useEffect(() => {
+    const storedStreak = Number(window.localStorage.getItem("study-streak"));
+    const storedDailyGoal = Number(window.localStorage.getItem("daily-goal"));
+
+    setStreak(Number.isFinite(storedStreak) ? storedStreak : 0);
+    setDailyGoal(Number.isFinite(storedDailyGoal) ? storedDailyGoal : 20);
+  }, []);
+
   return (
     <main className="page-shell home-shell">
       <nav className="top-nav">
         <Link href="/" className="logo">
-          <span className="logo-mark">西</span>
+          <span className="logo-mark">E</span>
           <span>Spanish Vocab</span>
         </Link>
 
         <div className="nav-links">
           <Link href="/study" className="nav-link">
-            A1 学习
+            开始学习
           </Link>
+
           <Link href="/mistakes" className="nav-link">
             错题本
           </Link>
+
+          <Link href="/review" className="nav-link">
+            错题复习
+          </Link>
+
           <Link href="/settings" className="nav-link">
-    设置
-  </Link>
+            设置
+          </Link>
         </div>
       </nav>
 
@@ -33,8 +53,8 @@ export default function Home() {
           </h1>
 
           <p className="home-subtitle">
-            每天几分钟，用单词卡片、错题本和轻量复习，
-            慢慢建立你的西语词汇量。
+            每天几分钟，用 DELE 分级词库、发音播放、错题本和轻量复习，
+            慢慢建立你的西班牙语词汇量。
           </p>
 
           <div className="home-actions">
@@ -49,18 +69,18 @@ export default function Home() {
 
           <div className="home-mini-grid">
             <div className="home-mini-item">
-              <strong>A1</strong>
-              <span>当前等级</span>
+              <strong>A1-B1</strong>
+              <span>DELE 分级词库</span>
             </div>
 
             <div className="home-mini-item">
-              <strong>20</strong>
-              <span>今日目标</span>
+              <strong>{dailyGoal}</strong>
+              <span>今日目标单词</span>
             </div>
 
             <div className="home-mini-item">
-              <strong>5 min</strong>
-              <span>轻量复习</span>
+              <strong>{streak}</strong>
+              <span>连续学习天数</span>
             </div>
           </div>
         </div>

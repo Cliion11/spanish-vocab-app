@@ -1591,3 +1591,141 @@ button:active,
     display: none !important;
   }
 }
+/* Mobile study page optimization */
+@media (max-width: 760px) {
+  .study-session {
+    width: 100%;
+    padding-top: 10px;
+  }
+
+  .study-header {
+    gap: 14px;
+    text-align: center;
+  }
+
+  .study-header h1 {
+    font-size: clamp(28px, 9vw, 42px);
+    line-height: 1.08;
+    letter-spacing: 0.02em;
+  }
+
+  .study-count {
+    justify-content: center;
+    font-size: 13px;
+  }
+
+  .progress-shell {
+    height: 10px;
+    margin-top: 18px;
+    border-radius: 999px;
+  }
+
+  .study-word-card {
+    margin-top: 24px;
+    padding: 28px 20px 24px;
+    border-radius: 34px;
+    min-height: auto;
+  }
+
+  .word-display {
+    gap: 8px;
+  }
+
+  .word-meta {
+    font-size: 12px;
+    letter-spacing: 0.18em;
+  }
+
+  .word-display .word,
+  .word {
+    margin: 12px 0 10px;
+    font-size: clamp(52px, 17vw, 76px);
+    line-height: 0.95;
+    letter-spacing: 0.015em;
+    word-break: break-word;
+  }
+
+  .audio-under-button {
+    min-height: 48px;
+    padding: 12px 18px;
+    font-size: 14px;
+    border-radius: 999px;
+  }
+
+  .study-hint,
+  .shortcut-hint {
+    max-width: 280px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+  }
+
+  .meaning {
+    margin-top: 22px;
+    padding: 16px 18px;
+    border-radius: 22px;
+    font-size: 18px;
+    line-height: 1.65;
+  }
+
+  .example,
+  .translation {
+    font-size: 15px;
+    line-height: 1.7;
+    text-align: center;
+  }
+
+  .study-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .study-actions button,
+  .study-actions a,
+  .study-actions .primary-button,
+  .study-actions .glass-button {
+    width: 100%;
+    min-height: 52px;
+    justify-content: center;
+    border-radius: 999px;
+    font-size: 15px;
+  }
+
+  .study-actions-main {
+    margin-top: 24px;
+  }
+
+  .study-feedback {
+    margin-top: 18px;
+    text-align: center;
+    font-size: 14px;
+  }
+
+  .complete-card {
+    padding: 30px 20px;
+    border-radius: 34px;
+  }
+
+  .complete-card h1 {
+    font-size: clamp(30px, 10vw, 44px);
+  }
+
+  .complete-stats {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .complete-actions {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .complete-actions a,
+  .complete-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+}

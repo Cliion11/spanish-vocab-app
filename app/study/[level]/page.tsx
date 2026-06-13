@@ -1,555 +1,812 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
-import { a1Words } from "@/data/a1Words";
-import { a2Words } from "@/data/a2Words";
-import { b1Words } from "@/data/b1Words";
+import { useEffect, useMemo, useState } from "react";
 
-type Level = "a1" | "a2" | "b1";
+type LevelId = "a1" | "a2" | "b1";
 
-type WordProgress = {
-  reviewCount: number;
-  lastRating: string;
-  inMistakeBook: boolean;
-  nextReviewAt: string;
+type WordItem = {
+  word: string;
+  meaning: string;
+  type: string;
+  example: string;
+  translation: string;
 };
 
-type StudyStats = {
-  totalReviews: number;
-  todayReviews: number;
-  todayDate: string;
-  studyDates: string[];
-  masteredWords: string[];
-  words: Record<string, WordProgress>;
+type MistakeItem = WordItem & {
+  id: string;
+  level: LevelId;
+  count: number;
+  createdAt: string;
+  updatedAt: string;
 };
 
-const reviewButtons = [
-  {
-    label: "忘记",
-    className:
-      "bg-rose-100/70 text-rose-950 shadow-rose-100/40 hover:bg-rose-50/80",
-  },
-  {
-    label: "困难",
-    className:
-      "bg-amber-100/70 text-amber-950 shadow-amber-100/40 hover:bg-amber-50/80",
-  },
-  {
-    label: "良好",
-    className:
-      "bg-emerald-100/70 text-emerald-950 shadow-emerald-100/40 hover:bg-emerald-50/80",
-  },
-  {
-    label: "简单",
-    className:
-      "bg-sky-100/70 text-sky-950 shadow-sky-100/40 hover:bg-sky-50/80",
-  },
-];
+type SessionResult = {
+  known: number;
+  unclear: number;
+  unknown: number;
+};
 
-const glassButtonBase =
-  "relative overflow-hidden rounded-full border border-white/30 px-5 py-3 font-semibold shadow-xl backdrop-blur-3xl transition duration-300 hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100";
+const levelNames: Record<LevelId, string> = {
+  a1: "DELE A1 基础词汇",
+  a2: "DELE A2 初级词汇",
+  b1: "DELE B1 中级词汇",
+};
 
-const neutralGlassButton =
-  "relative overflow-hidden rounded-full border border-white/20 bg-white/15 px-6 py-3 font-semibold text-white shadow-xl backdrop-blur-3xl transition duration-300 hover:bg-white/25 hover:scale-105";
+const wordBank: Record<LevelId, WordItem[]> = {
+  a1: [
+    {
+      word: "hola",
+      meaning: "你好",
+      type: "interj.",
+      example: "Hola, ¿cómo estás?",
+      translation: "你好，你怎么样？",
+    },
+    {
+      word: "gracias",
+      meaning: "谢谢",
+      type: "interj.",
+      example: "Muchas gracias por tu ayuda.",
+      translation: "非常感谢你的帮助。",
+    },
+    {
+      word: "por favor",
+      meaning: "请",
+      type: "loc.",
+      example: "Un café, por favor.",
+      translation: "请给我一杯咖啡。",
+    },
+    {
+      word: "perdón",
+      meaning: "对不起；不好意思",
+      type: "interj.",
+      example: "Perdón, no entiendo.",
+      translation: "不好意思，我不明白。",
+    },
+    {
+      word: "sí",
+      meaning: "是；对",
+      type: "adv.",
+      example: "Sí, quiero aprender español.",
+      translation: "是的，我想学习西班牙语。",
+    },
+    {
+      word: "no",
+      meaning: "不；没有",
+      type: "adv.",
+      example: "No tengo tiempo hoy.",
+      translation: "我今天没有时间。",
+    },
+    {
+      word: "casa",
+      meaning: "房子；家",
+      type: "n. f.",
+      example: "Mi casa está cerca de la escuela.",
+      translation: "我家在学校附近。",
+    },
+    {
+      word: "escuela",
+      meaning: "学校",
+      type: "n. f.",
+      example: "La escuela está abierta.",
+      translation: "学校开着。",
+    },
+    {
+      word: "amigo",
+      meaning: "朋友",
+      type: "n. m.",
+      example: "Mi amigo vive en Madrid.",
+      translation: "我的朋友住在马德里。",
+    },
+    {
+      word: "familia",
+      meaning: "家庭；家人",
+      type: "n. f.",
+      example: "Mi familia es muy grande.",
+      translation: "我的家人很多。",
+    },
+    {
+      word: "agua",
+      meaning: "水",
+      type: "n. f.",
+      example: "Quiero un vaso de agua.",
+      translation: "我想要一杯水。",
+    },
+    {
+      word: "café",
+      meaning: "咖啡",
+      type: "n. m.",
+      example: "Tomo café por la mañana.",
+      translation: "我早上喝咖啡。",
+    },
+    {
+      word: "pan",
+      meaning: "面包",
+      type: "n. m.",
+      example: "Compro pan en la tienda.",
+      translation: "我在商店买面包。",
+    },
+    {
+      word: "libro",
+      meaning: "书",
+      type: "n. m.",
+      example: "Leo un libro en español.",
+      translation: "我读一本西班牙语书。",
+    },
+    {
+      word: "día",
+      meaning: "天；日子",
+      type: "n. m.",
+      example: "Hoy es un buen día.",
+      translation: "今天是个好日子。",
+    },
+    {
+      word: "noche",
+      meaning: "夜晚",
+      type: "n. f.",
+      example: "Buenas noches.",
+      translation: "晚安。",
+    },
+    {
+      word: "comer",
+      meaning: "吃",
+      type: "v.",
+      example: "Vamos a comer juntos.",
+      translation: "我们一起吃饭吧。",
+    },
+    {
+      word: "beber",
+      meaning: "喝",
+      type: "v.",
+      example: "Quiero beber agua.",
+      translation: "我想喝水。",
+    },
+    {
+      word: "hablar",
+      meaning: "说话；交谈",
+      type: "v.",
+      example: "Quiero hablar contigo.",
+      translation: "我想和你说话。",
+    },
+    {
+      word: "vivir",
+      meaning: "居住；生活",
+      type: "v.",
+      example: "Vivo en China.",
+      translation: "我住在中国。",
+    },
+  ],
 
-function getTodayKey() {
-  const date = new Date();
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
+  a2: [
+    {
+      word: "viajar",
+      meaning: "旅行",
+      type: "v.",
+      example: "Me gusta viajar en verano.",
+      translation: "我喜欢在夏天旅行。",
+    },
+    {
+      word: "trabajar",
+      meaning: "工作",
+      type: "v.",
+      example: "Trabajo en una oficina.",
+      translation: "我在办公室工作。",
+    },
+    {
+      word: "aprender",
+      meaning: "学习",
+      type: "v.",
+      example: "Aprendo español todos los días.",
+      translation: "我每天学习西班牙语。",
+    },
+    {
+      word: "entender",
+      meaning: "理解；明白",
+      type: "v.",
+      example: "No entiendo esta palabra.",
+      translation: "我不明白这个单词。",
+    },
+    {
+      word: "comprar",
+      meaning: "买",
+      type: "v.",
+      example: "Quiero comprar una chaqueta.",
+      translation: "我想买一件夹克。",
+    },
+    {
+      word: "vender",
+      meaning: "卖",
+      type: "v.",
+      example: "Esta tienda vende frutas.",
+      translation: "这家商店卖水果。",
+    },
+    {
+      word: "ciudad",
+      meaning: "城市",
+      type: "n. f.",
+      example: "Madrid es una ciudad grande.",
+      translation: "马德里是一座大城市。",
+    },
+    {
+      word: "calle",
+      meaning: "街道",
+      type: "n. f.",
+      example: "La calle es muy tranquila.",
+      translation: "这条街很安静。",
+    },
+    {
+      word: "tienda",
+      meaning: "商店",
+      type: "n. f.",
+      example: "Voy a la tienda.",
+      translation: "我去商店。",
+    },
+    {
+      word: "precio",
+      meaning: "价格",
+      type: "n. m.",
+      example: "El precio es muy alto.",
+      translation: "价格很高。",
+    },
+    {
+      word: "dinero",
+      meaning: "钱",
+      type: "n. m.",
+      example: "No tengo mucho dinero.",
+      translation: "我没有很多钱。",
+    },
+    {
+      word: "tiempo",
+      meaning: "时间；天气",
+      type: "n. m.",
+      example: "No tengo tiempo ahora.",
+      translation: "我现在没有时间。",
+    },
+    {
+      word: "ayer",
+      meaning: "昨天",
+      type: "adv.",
+      example: "Ayer estudié español.",
+      translation: "昨天我学习了西班牙语。",
+    },
+    {
+      word: "mañana",
+      meaning: "明天；早晨",
+      type: "n. f. / adv.",
+      example: "Mañana voy al trabajo.",
+      translation: "明天我去工作。",
+    },
+    {
+      word: "cansado",
+      meaning: "累的",
+      type: "adj.",
+      example: "Estoy cansado después del trabajo.",
+      translation: "下班后我很累。",
+    },
+    {
+      word: "contento",
+      meaning: "高兴的",
+      type: "adj.",
+      example: "Estoy contento con mi progreso.",
+      translation: "我对自己的进步很高兴。",
+    },
+  ],
 
-  return `${year}-${month}-${day}`;
+  b1: [
+    {
+      word: "aunque",
+      meaning: "虽然；即使",
+      type: "conj.",
+      example: "Aunque llueve, voy a salir.",
+      translation: "虽然下雨，我还是要出门。",
+    },
+    {
+      word: "sin embargo",
+      meaning: "然而；不过",
+      type: "loc.",
+      example: "Es difícil; sin embargo, quiero intentarlo.",
+      translation: "这很难，不过我想试试。",
+    },
+    {
+      word: "por eso",
+      meaning: "因此；所以",
+      type: "loc.",
+      example: "Estoy cansado, por eso voy a descansar.",
+      translation: "我很累，所以我要休息。",
+    },
+    {
+      word: "lograr",
+      meaning: "实现；达成",
+      type: "v.",
+      example: "Quiero lograr mi objetivo.",
+      translation: "我想实现我的目标。",
+    },
+    {
+      word: "mejorar",
+      meaning: "改善；提高",
+      type: "v.",
+      example: "Necesito mejorar mi español.",
+      translation: "我需要提高我的西语。",
+    },
+    {
+      word: "decidir",
+      meaning: "决定",
+      type: "v.",
+      example: "Tengo que decidir hoy.",
+      translation: "我今天必须做决定。",
+    },
+    {
+      word: "explicar",
+      meaning: "解释",
+      type: "v.",
+      example: "¿Puedes explicarlo otra vez?",
+      translation: "你可以再解释一遍吗？",
+    },
+    {
+      word: "recordar",
+      meaning: "记得；回忆",
+      type: "v.",
+      example: "No puedo recordar su nombre.",
+      translation: "我想不起他的名字。",
+    },
+    {
+      word: "costumbre",
+      meaning: "习惯；风俗",
+      type: "n. f.",
+      example: "Es una costumbre muy antigua.",
+      translation: "这是一个很古老的习俗。",
+    },
+    {
+      word: "consejo",
+      meaning: "建议",
+      type: "n. m.",
+      example: "Gracias por tu consejo.",
+      translation: "谢谢你的建议。",
+    },
+    {
+      word: "cambio",
+      meaning: "变化；改变",
+      type: "n. m.",
+      example: "Este cambio es importante.",
+      translation: "这个变化很重要。",
+    },
+    {
+      word: "éxito",
+      meaning: "成功",
+      type: "n. m.",
+      example: "El éxito requiere paciencia.",
+      translation: "成功需要耐心。",
+    },
+    {
+      word: "fracaso",
+      meaning: "失败",
+      type: "n. m.",
+      example: "El fracaso también enseña.",
+      translation: "失败也会教会人东西。",
+    },
+    {
+      word: "desarrollo",
+      meaning: "发展",
+      type: "n. m.",
+      example: "El desarrollo personal es importante.",
+      translation: "个人发展很重要。",
+    },
+    {
+      word: "relación",
+      meaning: "关系",
+      type: "n. f.",
+      example: "Tenemos una buena relación.",
+      translation: "我们关系很好。",
+    },
+    {
+      word: "experiencia",
+      meaning: "经验；经历",
+      type: "n. f.",
+      example: "Fue una experiencia interesante.",
+      translation: "那是一次有趣的经历。",
+    },
+  ],
+};
+
+function isLevelId(value: unknown): value is LevelId {
+  return value === "a1" || value === "a2" || value === "b1";
 }
 
-function createDefaultStats(): StudyStats {
-  return {
-    totalReviews: 0,
-    todayReviews: 0,
-    todayDate: getTodayKey(),
-    studyDates: [],
-    masteredWords: [],
-    words: {},
-  };
+function readNumber(key: string) {
+  if (typeof window === "undefined") return 0;
+
+  const value = window.localStorage.getItem(key);
+  const numberValue = Number(value);
+
+  return Number.isFinite(numberValue) ? numberValue : 0;
 }
 
-function getValidLevel(value: unknown): Level {
-  if (value === "a1" || value === "a2" || value === "b1") {
-    return value;
-  }
-
-  return "a1";
+function writeNumber(key: string, value: number) {
+  window.localStorage.setItem(key, String(value));
 }
 
-function getWordsByLevel(level: Level) {
-  if (level === "a2") return a2Words;
-  if (level === "b1") return b1Words;
-  return a1Words;
+function speakSpanish(text: string) {
+  if (typeof window === "undefined") return;
+  if (!("speechSynthesis" in window)) return;
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  const storedRate = Number(window.localStorage.getItem("speech-rate"));
+
+  utterance.lang = "es-ES";
+  utterance.rate =
+    Number.isFinite(storedRate) && storedRate >= 0.6 && storedRate <= 1.2
+      ? storedRate
+      : 0.82;
+  utterance.pitch = 1;
+
+  const voices = window.speechSynthesis.getVoices();
+  const spanishVoice = voices.find((voice) =>
+    voice.lang.toLowerCase().startsWith("es")
+  );
+
+  if (spanishVoice) {
+    utterance.voice = spanishVoice;
+  }
+
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
 }
 
-function getNextReviewAt(rating: string): string {
-  const nextDate = new Date();
+function readMistakes(): MistakeItem[] {
+  if (typeof window === "undefined") return [];
 
-  if (rating === "忘记") {
-    nextDate.setMinutes(nextDate.getMinutes() + 5);
+  try {
+    const raw = window.localStorage.getItem("mistakes");
+    if (!raw) return [];
+
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
   }
-
-  if (rating === "困难") {
-    nextDate.setDate(nextDate.getDate() + 1);
-  }
-
-  if (rating === "良好") {
-    nextDate.setDate(nextDate.getDate() + 3);
-  }
-
-  if (rating === "简单") {
-    nextDate.setDate(nextDate.getDate() + 7);
-  }
-
-  return nextDate.toISOString();
 }
 
-function getDefaultProgress(): WordProgress {
-  return {
-    reviewCount: 0,
-    lastRating: "暂无",
-    inMistakeBook: false,
-    nextReviewAt: "",
-  };
-}
+function addMistake(level: LevelId, word: WordItem) {
+  const mistakes = readMistakes();
 
-function normalizeStats(value: unknown): StudyStats {
-  const today = getTodayKey();
+  const existingIndex = mistakes.findIndex(
+    (item) => item.level === level && item.word === word.word
+  );
 
-  if (!value || typeof value !== "object") {
-    return createDefaultStats();
+  const now = new Date().toISOString();
+
+  if (existingIndex >= 0) {
+    mistakes[existingIndex] = {
+      ...mistakes[existingIndex],
+      count: mistakes[existingIndex].count + 1,
+      updatedAt: now,
+    };
+  } else {
+    mistakes.push({
+      ...word,
+      id: `${level}-${word.word}`,
+      level,
+      count: 1,
+      createdAt: now,
+      updatedAt: now,
+    });
   }
 
-  const raw = value as Partial<StudyStats>;
-  const normalizedWords: Record<string, WordProgress> = {};
-
-  if (raw.words && typeof raw.words === "object") {
-    for (const [wordId, progress] of Object.entries(raw.words)) {
-      normalizedWords[wordId] = {
-        reviewCount: progress.reviewCount ?? 0,
-        lastRating: progress.lastRating ?? "暂无",
-        inMistakeBook: progress.inMistakeBook ?? false,
-        nextReviewAt: progress.nextReviewAt ?? "",
-      };
-    }
-  }
-
-  return {
-    totalReviews: raw.totalReviews ?? 0,
-    todayReviews: raw.todayDate === today ? raw.todayReviews ?? 0 : 0,
-    todayDate: today,
-    studyDates: raw.studyDates ?? [],
-    masteredWords: raw.masteredWords ?? [],
-    words: normalizedWords,
-  };
+  window.localStorage.setItem("mistakes", JSON.stringify(mistakes));
 }
 
-function isDue(nextReviewAt: string) {
-  if (!nextReviewAt) {
-    return true;
-  }
-
-  const nextTime = new Date(nextReviewAt).getTime();
-
-  if (Number.isNaN(nextTime)) {
-    return true;
-  }
-
-  return nextTime <= Date.now();
-}
-
-function formatNextReviewTime(nextReviewAt: string) {
-  if (!nextReviewAt) {
-    return "暂无";
-  }
-
-  return new Date(nextReviewAt).toLocaleString();
-}
-
-function getDateKeyOffset(daysAgo: number) {
-  const date = new Date();
-  date.setDate(date.getDate() - daysAgo);
-
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
-
-function getStudyStreak(studyDates: string[]) {
-  const dateSet = new Set(studyDates);
-  let streak = 0;
-
-  for (let offset = 0; offset < 365; offset += 1) {
-    const dateKey = getDateKeyOffset(offset);
-
-    if (!dateSet.has(dateKey)) {
-      break;
-    }
-
-    streak += 1;
-  }
-
-  return streak;
-}
-
-export default function StudyPage() {
+export default function StudyLevelPage() {
   const params = useParams();
-  const levelParam = Array.isArray(params.level)
-    ? params.level[0]
-    : params.level;
+  const rawLevel = params.level;
+  const level = Array.isArray(rawLevel) ? rawLevel[0] : rawLevel;
 
-  const level = getValidLevel(levelParam);
-  const words = getWordsByLevel(level);
-  const storageKey = `spanish-vocab-${level}-progress`;
+  const safeLevel: LevelId = isLevelId(level) ? level : "a1";
+  const words = useMemo(() => wordBank[safeLevel], [safeLevel]);
 
   const [index, setIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
-  const [message, setMessage] = useState("");
-  const [autoNext, setAutoNext] = useState(false);
-  const [lockedWordId, setLockedWordId] = useState<string | null>(null);
-  const [reviewedWordId, setReviewedWordId] = useState<string | null>(null);
-  const [stats, setStats] = useState<StudyStats>(createDefaultStats);
+  const [lastFeedback, setLastFeedback] = useState("");
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [sessionResult, setSessionResult] = useState<SessionResult>({
+    known: 0,
+    unclear: 0,
+    unknown: 0,
+  });
+
+  const currentWord = words[index];
+  const progress = isCompleted
+    ? 100
+    : Math.round(((index + 1) / words.length) * 100);
 
   useEffect(() => {
-    const saved = window.localStorage.getItem(storageKey);
+    if (isCompleted) return;
 
-    if (!saved) {
-      setStats(createDefaultStats());
-      setIndex(0);
+    const autoSpeak = window.localStorage.getItem("auto-speak");
+
+    if (autoSpeak === "false") {
       return;
     }
 
-    try {
-      setStats(normalizeStats(JSON.parse(saved)));
-      setIndex(0);
-    } catch {
-      setStats(createDefaultStats());
-      setIndex(0);
+    const timer = window.setTimeout(() => {
+      speakSpanish(currentWord.word);
+    }, 450);
+
+    return () => {
+      window.clearTimeout(timer);
+      window.speechSynthesis.cancel();
+    };
+  }, [currentWord.word, isCompleted]);
+  useEffect(() => {
+  function handleShortcut(event: KeyboardEvent) {
+    const target = event.target as HTMLElement | null;
+    const tagName = target?.tagName?.toLowerCase();
+
+    if (tagName === "input" || tagName === "textarea" || tagName === "select") {
+      return;
     }
-  }, [storageKey]);
 
-  const dueWords = useMemo(() => {
-    return words.filter((item) => {
-      const progress = stats.words[item.id];
+    if (isCompleted) {
+      return;
+    }
 
-      if (!progress) {
-        return true;
+    const key = event.key.toLowerCase();
+
+    if (key === "r") {
+      event.preventDefault();
+      speakSpanish(currentWord.word);
+      return;
+    }
+
+    if (event.code === "Space") {
+      event.preventDefault();
+
+      if (!showAnswer) {
+        setShowAnswer(true);
       }
 
-      return isDue(progress.nextReviewAt);
-    });
-  }, [words, stats.words]);
+      return;
+    }
 
-  const lockedWord = lockedWordId
-    ? words.find((item) => item.id === lockedWordId)
-    : undefined;
+    if (!showAnswer) {
+      return;
+    }
 
-  const word = lockedWord ?? dueWords[index % dueWords.length];
+    if (key === "1") {
+      event.preventDefault();
+      handleAnswer("unknown");
+      return;
+    }
 
-  const mistakeCount = Object.values(stats.words).filter(
-    (progress) => progress.inMistakeBook,
-  ).length;
+    if (key === "2") {
+      event.preventDefault();
+      handleAnswer("unclear");
+      return;
+    }
 
-  const streak = getStudyStreak(stats.studyDates);
-  const hasReviewedCurrentWord = reviewedWordId === word?.id;
-
-  function saveStats(nextStats: StudyStats) {
-    setStats(nextStats);
-    window.localStorage.setItem(storageKey, JSON.stringify(nextStats));
+    if (key === "3") {
+      event.preventDefault();
+      handleAnswer("known");
+    }
   }
 
-  function nextWord() {
-    const wasLocked = lockedWordId !== null;
+  window.addEventListener("keydown", handleShortcut);
 
+  return () => {
+    window.removeEventListener("keydown", handleShortcut);
+  };
+}, [currentWord.word, showAnswer, isCompleted]);
+
+  function handleAnswer(result: "known" | "unclear" | "unknown") {
+    const totalReviewKey = `${safeLevel}-total-review`;
+    const todayReviewKey = `${safeLevel}-today-review`;
+    const learnedKey = `${safeLevel}-learned`;
+    const masteredKey = `${safeLevel}-mastered`;
+    const mistakesKey = `${safeLevel}-mistakes`;
+    const dueKey = `${safeLevel}-due`;
+
+    writeNumber(totalReviewKey, readNumber(totalReviewKey) + 1);
+    writeNumber(todayReviewKey, readNumber(todayReviewKey) + 1);
+    writeNumber(learnedKey, Math.max(readNumber(learnedKey), index + 1));
+
+    if (result === "known") {
+      writeNumber(masteredKey, readNumber(masteredKey) + 1);
+      setSessionResult((current) => ({
+        ...current,
+        known: current.known + 1,
+      }));
+      setLastFeedback("¡Bien! 已记录为掌握");
+    }
+
+    if (result === "unclear") {
+      writeNumber(dueKey, readNumber(dueKey) + 1);
+      setSessionResult((current) => ({
+        ...current,
+        unclear: current.unclear + 1,
+      }));
+      setLastFeedback("已加入稍后复习");
+    }
+
+    if (result === "unknown") {
+      writeNumber(mistakesKey, readNumber(mistakesKey) + 1);
+      writeNumber(dueKey, readNumber(dueKey) + 1);
+      addMistake(safeLevel, currentWord);
+      setSessionResult((current) => ({
+        ...current,
+        unknown: current.unknown + 1,
+      }));
+      setLastFeedback("已加入错题本");
+    }
+
+    if (index + 1 >= words.length) {
+      setIsCompleted(true);
+      setShowAnswer(false);
+      return;
+    }
+
+    setIndex(index + 1);
     setShowAnswer(false);
-    setMessage("");
-    setLockedWordId(null);
-    setReviewedWordId(null);
-
-    if (dueWords.length === 0) {
-      return;
-    }
-
-    setIndex((currentIndex) =>
-      wasLocked
-        ? currentIndex % dueWords.length
-        : (currentIndex + 1) % dueWords.length,
-    );
   }
 
-  if (!word) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-950 px-6 py-10 text-white">
-        <section className="max-w-xl rounded-3xl border border-white/10 bg-white/10 p-8 text-center shadow-2xl backdrop-blur-3xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-300">
-            DELE {level.toUpperCase()}
-          </p>
-
-          <h1 className="mt-4 text-3xl font-bold">今日复习已完成 🎉</h1>
-
-          <p className="mt-4 text-slate-300">
-            当前没有到期需要复习的单词。你可以稍后回来，或者切换到其他词书继续学习。
-          </p>
-
-          <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-4 backdrop-blur-3xl">
-            <p className="text-sm text-slate-400">连续学习</p>
-            <p className="mt-2 text-3xl font-bold">{streak} 天</p>
-          </div>
-
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <a href="/" className={neutralGlassButton}>
-              返回首页
-            </a>
-
-            <a href="/mistakes" className={neutralGlassButton}>
-              查看错题本
-            </a>
-          </div>
-        </section>
-      </main>
-    );
-  }
-
-  const currentProgress = stats.words[word.id] ?? getDefaultProgress();
-
-  function speak() {
-    if (!("speechSynthesis" in window)) {
-      alert("当前浏览器不支持语音朗读。");
-      return;
-    }
-
-    window.speechSynthesis.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(word.word);
-    utterance.lang = "es-ES";
-    utterance.rate = 0.85;
-
-    window.speechSynthesis.speak(utterance);
-  }
-
-  function review(rating: string) {
-    if (hasReviewedCurrentWord) {
-      return;
-    }
-
-    const today = getTodayKey();
-    const shouldAddToMistakeBook = rating === "忘记" || rating === "困难";
-    const shouldMaster = rating === "良好" || rating === "简单";
-
-    const previousProgress = stats.words[word.id] ?? getDefaultProgress();
-
-    const nextMasteredWords = shouldMaster
-      ? Array.from(new Set([...stats.masteredWords, word.id]))
-      : stats.masteredWords;
-
-    const nextStudyDates = Array.from(new Set([...stats.studyDates, today]));
-
-    const nextStats: StudyStats = {
-      totalReviews: stats.totalReviews + 1,
-      todayReviews: stats.todayDate === today ? stats.todayReviews + 1 : 1,
-      todayDate: today,
-      studyDates: nextStudyDates,
-      masteredWords: nextMasteredWords,
-      words: {
-        ...stats.words,
-        [word.id]: {
-          reviewCount: previousProgress.reviewCount + 1,
-          lastRating: rating,
-          inMistakeBook:
-            previousProgress.inMistakeBook || shouldAddToMistakeBook,
-          nextReviewAt: getNextReviewAt(rating),
-        },
-      },
-    };
-
-    setLockedWordId(word.id);
-    setReviewedWordId(word.id);
-    saveStats(nextStats);
-    setMessage(`你选择了：${rating}`);
-
-    if (autoNext) {
-      window.setTimeout(() => {
-        setShowAnswer(false);
-        setMessage("");
-        setLockedWordId(null);
-        setReviewedWordId(null);
-      }, 500);
-    }
+  function restartSession() {
+    setIndex(0);
+    setShowAnswer(false);
+    setLastFeedback("");
+    setIsCompleted(false);
+    setSessionResult({
+      known: 0,
+      unclear: 0,
+      unknown: 0,
+    });
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
-      <section className="mx-auto flex max-w-3xl flex-col gap-8">
-        <div>
-          <a href="/" className="text-sm text-emerald-300 hover:text-emerald-200">
-            ← 返回首页
-          </a>
+    <main className="page-shell">
+      <nav className="top-nav">
+        <Link href="/" className="logo">
+          <span className="logo-mark">西</span>
+          <span>Spanish Vocab</span>
+        </Link>
 
-          <p className="mt-8 text-sm font-semibold uppercase tracking-[0.3em] text-emerald-300">
-            DELE {level.toUpperCase()}
-          </p>
+        <div className="nav-links">
+          <Link href="/study" className="nav-link">
+            返回等级
+          </Link>
+          <Link href="/mistakes" className="nav-link">
+            错题本
+          </Link>
+        </div>
+      </nav>
 
-          <h1 className="mt-3 text-3xl font-bold">今日学习</h1>
-
-          <p className="mt-2 text-slate-400">
-            当前到期 {dueWords.length} 个 / 总计 {words.length} 个
-          </p>
-
-          <div className="mt-6 grid gap-3 sm:grid-cols-5">
-            <div className="rounded-2xl border border-white/10 bg-white/10 p-4 shadow-xl backdrop-blur-3xl">
-              <p className="text-xs text-slate-300">今日学习</p>
-              <p className="mt-2 text-2xl font-bold">{stats.todayReviews}</p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/10 p-4 shadow-xl backdrop-blur-3xl">
-              <p className="text-xs text-slate-300">总复习</p>
-              <p className="mt-2 text-2xl font-bold">{stats.totalReviews}</p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/10 p-4 shadow-xl backdrop-blur-3xl">
-              <p className="text-xs text-slate-300">已掌握</p>
-              <p className="mt-2 text-2xl font-bold">
-                {stats.masteredWords.length}
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/10 p-4 shadow-xl backdrop-blur-3xl">
-              <p className="text-xs text-slate-300">错题数</p>
-              <p className="mt-2 text-2xl font-bold">{mistakeCount}</p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/10 p-4 shadow-xl backdrop-blur-3xl">
-              <p className="text-xs text-slate-300">连续学习</p>
-              <p className="mt-2 text-2xl font-bold">{streak} 天</p>
-            </div>
+      <section className="study-session">
+        <div className="study-header glass-card">
+          <div>
+            <p className="eyebrow">Study Session</p>
+            <h1>{levelNames[safeLevel]}</h1>
           </div>
 
-          <label className="mt-5 inline-flex cursor-pointer items-center gap-3 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm text-slate-100 shadow-xl backdrop-blur-3xl transition hover:bg-white/15">
-            <input
-              type="checkbox"
-              checked={autoNext}
-              onChange={(event) => setAutoNext(event.target.checked)}
-              className="h-4 w-4 accent-white"
-            />
-            选择后自动跳下一个单词
-          </label>
+          <div className="study-count">
+            {isCompleted ? words.length : index + 1}
+            <span>/ {words.length}</span>
+          </div>
         </div>
 
-        <article className="rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-3xl">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-sm text-slate-400">西班牙语单词</p>
+        <div className="progress-shell">
+          <div className="progress-bar" style={{ width: `${progress}%` }} />
+        </div>
 
-              <h2 className="mt-3 text-6xl font-bold tracking-tight">
-                {word.word}
-              </h2>
-            </div>
+        {isCompleted ? (
+          <article className="complete-card glass-card">
+            <div className="complete-icon">✓</div>
 
-            <button onClick={speak} className={neutralGlassButton}>
-              播放发音
-            </button>
-          </div>
+            <p className="eyebrow">Session Complete</p>
 
-          <div className="mt-6 grid gap-3 sm:grid-cols-4">
-            <div className="rounded-2xl border border-white/10 bg-black/20 p-4 backdrop-blur-3xl">
-              <p className="text-xs text-slate-400">本词复习次数</p>
-              <p className="mt-2 text-xl font-bold">
-                {currentProgress.reviewCount}
-              </p>
-            </div>
+            <h2>这一轮完成了</h2>
 
-            <div className="rounded-2xl border border-white/10 bg-black/20 p-4 backdrop-blur-3xl">
-              <p className="text-xs text-slate-400">上次选择</p>
-              <p className="mt-2 text-xl font-bold">
-                {currentProgress.lastRating}
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-black/20 p-4 backdrop-blur-3xl">
-              <p className="text-xs text-slate-400">错题本</p>
-              <p className="mt-2 text-xl font-bold">
-                {currentProgress.inMistakeBook ? "已加入" : "未加入"}
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-black/20 p-4 backdrop-blur-3xl">
-              <p className="text-xs text-slate-400">下次复习</p>
-              <p className="mt-2 text-sm font-bold">
-                {formatNextReviewTime(currentProgress.nextReviewAt)}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-8 rounded-2xl border border-white/10 bg-white/10 p-6 backdrop-blur-3xl">
-            {showAnswer ? (
-              <div className="space-y-5">
-                <div>
-                  <p className="text-sm text-slate-300">中文释义</p>
-                  <p className="mt-2 text-2xl font-bold">{word.chinese}</p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-slate-300">词性</p>
-                  <p className="mt-2">
-                    {word.pos}
-                    {word.gender ? ` · ${word.gender}` : ""}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-slate-300">例句</p>
-                  <p className="mt-2 text-lg">{word.exampleEs}</p>
-                  <p className="mt-1 text-slate-300">{word.exampleZh}</p>
-                </div>
-              </div>
-            ) : (
-              <p className="text-lg text-slate-200">
-                先看单词，尝试回忆中文意思。想好后点击“显示答案”。
-              </p>
-            )}
-          </div>
-
-          <div className="mt-8 flex flex-wrap gap-4">
-            {!showAnswer && (
-              <button
-                onClick={() => setShowAnswer(true)}
-                className={neutralGlassButton}
-              >
-                显示答案
-              </button>
-            )}
-
-            {showAnswer &&
-              reviewButtons.map((button) => (
-                <button
-                  key={button.label}
-                  disabled={hasReviewedCurrentWord}
-                  onClick={() => review(button.label)}
-                  className={`${glassButtonBase} ${button.className}`}
-                >
-                  {button.label}
-                </button>
-              ))}
-
-            <button onClick={nextWord} className={neutralGlassButton}>
-              下一个词
-            </button>
-          </div>
-
-          {message && (
-            <p className="mt-4 font-semibold text-emerald-200">
-              {message}
-              {!autoNext && "，请点击“下一个词”继续。"}
+            <p className="complete-desc">
+              你已经完成 {levelNames[safeLevel]} 的本轮学习。建议先复习错题，
+              再开始下一轮。
             </p>
-          )}
-        </article>
+
+            <div className="complete-stats">
+              <div>
+                <strong>{sessionResult.known}</strong>
+                <span>认识</span>
+              </div>
+              <div>
+                <strong>{sessionResult.unclear}</strong>
+                <span>模糊</span>
+              </div>
+              <div>
+                <strong>{sessionResult.unknown}</strong>
+                <span>不认识</span>
+              </div>
+            </div>
+
+            <div className="complete-actions">
+              <button
+                type="button"
+                className="primary-button"
+                onClick={restartSession}
+              >
+                再学一轮
+              </button>
+
+              <Link href="/mistakes" className="glass-button">
+                复习错题
+              </Link>
+
+              <Link href="/study" className="glass-button">
+                返回等级
+              </Link>
+            </div>
+          </article>
+        ) : (
+          <article className="word-card study-word-card">
+  <div className="word-display">
+  <p className="word-meta">{currentWord.type}</p>
+
+  <h2 className="word">{currentWord.word}</h2>
+
+  <button
+    type="button"
+    className="audio-under-button"
+    aria-label={`播放 ${currentWord.word} 的发音`}
+    onClick={() => speakSpanish(currentWord.word)}
+  >
+   🎵
+  </button>
+</div>
+
+  {!showAnswer ? (
+              <>
+                <p className="study-hint">
+  先在心里回忆它的意思，再显示答案。
+</p>
+
+<p className="shortcut-hint">空格显示答案 · R 播放发音</p>
+
+                <div className="study-actions study-actions-main">
+  <button
+    type="button"
+    className="primary-button"
+    onClick={() => setShowAnswer(true)}
+  >
+    显示答案
+  </button>
+</div>
+              </>
+            ) : (
+              <>
+                <div className="meaning">{currentWord.meaning}</div>
+
+                <p className="example">{currentWord.example}</p>
+                <p className="translation">{currentWord.translation}</p>
+                <p className="shortcut-hint">1 不认识 · 2 模糊 · 3 认识 · R 播放发音</p>
+
+                <div className="study-actions">
+                  <button type="button" onClick={() => handleAnswer("unknown")}>
+                    不认识
+                  </button>
+
+                  <button type="button" onClick={() => handleAnswer("unclear")}>
+                    模糊
+                  </button>
+
+                  <button
+                    type="button"
+                    className="primary-button"
+                    onClick={() => handleAnswer("known")}
+                  >
+                    认识
+                  </button>
+                </div>
+              </>
+            )}
+
+            {lastFeedback && <p className="study-feedback">{lastFeedback}</p>}
+          </article>
+        )}
       </section>
     </main>
   );

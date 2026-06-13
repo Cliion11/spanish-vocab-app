@@ -1,334 +1,250 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
-type Level = "a1" | "a2" | "b1";
-
-type WordProgress = {
-  reviewCount?: number;
-  lastRating?: string;
-  inMistakeBook?: boolean;
-  nextReviewAt?: string;
+type SettingsState = {
+  dailyGoal: number;
+  autoSpeak: boolean;
+  speechRate: number;
 };
 
-type StudyStats = {
-  totalReviews?: number;
-  todayReviews?: number;
-  todayDate?: string;
-  studyDates?: string[];
-  masteredWords?: string[];
-  words?: Record<string, WordProgress>;
+const defaultSettings: SettingsState = {
+  dailyGoal: 20,
+  autoSpeak: true,
+  speechRate: 0.82,
 };
 
-const decks = [
-  {
-    level: "a1" as const,
-    label: "A1",
-    title: "DELE A1 基础词汇",
-  },
-  {
-    level: "a2" as const,
-    label: "A2",
-    title: "DELE A2 初级词汇",
-  },
-  {
-    level: "b1" as const,
-    label: "B1",
-    title: "DELE B1 中级词汇",
-  },
+const levels = ["a1", "a2", "b1"];
+const statKeys = [
+  "total-review",
+  "today-review",
+  "learned",
+  "mastered",
+  "mistakes",
+  "due",
 ];
 
-const neutralButton =
-  "rounded-full border border-white/20 bg-white/15 px-5 py-3 font-semibold text-white shadow-xl backdrop-blur-3xl transition hover:scale-105 hover:bg-white/25";
-
-const dangerButton =
-  "rounded-full border border-rose-200/30 bg-rose-100/70 px-5 py-3 font-semibold text-rose-950 shadow-xl backdrop-blur-3xl transition hover:scale-105 hover:bg-rose-50/80";
-
-function getStorageKey(level: Level) {
-  return `spanish-vocab-${level}-progress`;
+function readBoolean(value: string | null, fallback: boolean) {
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return fallback;
 }
 
-function readStats(level: Level): StudyStats {
-  if (typeof window === "undefined") {
-    return {};
-  }
-
-  const saved = window.localStorage.getItem(getStorageKey(level));
-
-  if (!saved) {
-    return {};
-  }
-
-  try {
-    return JSON.parse(saved) as StudyStats;
-  } catch {
-    return {};
-  }
-}
-
-function countMistakes(stats: StudyStats) {
-  return Object.values(stats.words ?? {}).filter(
-    (progress) => progress.inMistakeBook,
-  ).length;
-}
-
-function countStudiedWords(stats: StudyStats) {
-  return Object.keys(stats.words ?? {}).length;
-}
-
-function countDueWords(stats: StudyStats) {
-  return Object.values(stats.words ?? {}).filter((progress) => {
-    if (!progress.nextReviewAt) {
-      return false;
-    }
-
-    const time = new Date(progress.nextReviewAt).getTime();
-
-    if (Number.isNaN(time)) {
-      return false;
-    }
-
-    return time <= Date.now();
-  }).length;
+function readNumber(value: string | null, fallback: number) {
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : fallback;
 }
 
 export default function SettingsPage() {
-  const [statsMap, setStatsMap] = useState<Record<Level, StudyStats>>({
-    a1: {},
-    a2: {},
-    b1: {},
-  });
-
+  const [settings, setSettings] = useState<SettingsState>(defaultSettings);
   const [message, setMessage] = useState("");
 
-  function refreshStats() {
-    setStatsMap({
-      a1: readStats("a1"),
-      a2: readStats("a2"),
-      b1: readStats("b1"),
-    });
-  }
-
   useEffect(() => {
-    refreshStats();
-  }, []);
-
-  const summary = useMemo(() => {
-    let totalReviews = 0;
-    let todayReviews = 0;
-    let masteredWords = 0;
-    let mistakeWords = 0;
-
-    for (const deck of decks) {
-      const stats = statsMap[deck.level];
-
-      totalReviews += stats.totalReviews ?? 0;
-      todayReviews += stats.todayReviews ?? 0;
-      masteredWords += stats.masteredWords?.length ?? 0;
-      mistakeWords += countMistakes(stats);
-    }
-
-    return {
-      totalReviews,
-      todayReviews,
-      masteredWords,
-      mistakeWords,
-    };
-  }, [statsMap]);
-
-  function resetLevel(level: Level) {
-    const confirmed = window.confirm(
-      `确定要清空 ${level.toUpperCase()} 的学习数据吗？这个操作不能撤销。`,
+    const storedDailyGoal = readNumber(
+      window.localStorage.getItem("daily-goal"),
+      defaultSettings.dailyGoal
     );
 
-    if (!confirmed) {
-      return;
+    const storedAutoSpeak = readBoolean(
+      window.localStorage.getItem("auto-speak"),
+      defaultSettings.autoSpeak
+    );
+
+    const storedSpeechRate = readNumber(
+      window.localStorage.getItem("speech-rate"),
+      defaultSettings.speechRate
+    );
+
+    setSettings({
+      dailyGoal: storedDailyGoal,
+      autoSpeak: storedAutoSpeak,
+      speechRate: storedSpeechRate,
+    });
+  }, []);
+
+  function updateSetting<Key extends keyof SettingsState>(
+    key: Key,
+    value: SettingsState[Key]
+  ) {
+    const nextSettings = {
+      ...settings,
+      [key]: value,
+    };
+
+    setSettings(nextSettings);
+
+    if (key === "dailyGoal") {
+      window.localStorage.setItem("daily-goal", String(value));
     }
 
-    window.localStorage.removeItem(getStorageKey(level));
-    refreshStats();
-    setMessage(`已清空 ${level.toUpperCase()} 学习数据。`);
+    if (key === "autoSpeak") {
+      window.localStorage.setItem("auto-speak", String(value));
+    }
+
+    if (key === "speechRate") {
+      window.localStorage.setItem("speech-rate", String(value));
+    }
+
+    setMessage("设置已保存");
+  }
+
+  function clearMistakes() {
+    const confirmed = window.confirm("确定要清空错题本吗？");
+
+    if (!confirmed) return;
+
+    window.localStorage.removeItem("mistakes");
+    setMessage("错题本已清空");
+  }
+
+  function clearStats() {
+    const confirmed = window.confirm("确定要清空所有学习统计吗？错题本不会被清空。");
+
+    if (!confirmed) return;
+
+    levels.forEach((level) => {
+      statKeys.forEach((key) => {
+        window.localStorage.removeItem(`${level}-${key}`);
+      });
+    });
+
+    setMessage("学习统计已清空");
   }
 
   function resetAll() {
     const confirmed = window.confirm(
-      "确定要清空 A1 / A2 / B1 全部学习数据吗？这个操作不能撤销。",
+      "确定要重置所有本地数据吗？这会清空错题本、学习统计和设置。"
     );
 
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
 
-    for (const deck of decks) {
-      window.localStorage.removeItem(getStorageKey(deck.level));
-    }
+    window.localStorage.removeItem("mistakes");
 
-    refreshStats();
-    setMessage("已清空全部学习数据。");
-  }
+    levels.forEach((level) => {
+      statKeys.forEach((key) => {
+        window.localStorage.removeItem(`${level}-${key}`);
+      });
+    });
 
-  async function copyBackup() {
-    const backup = {
-      exportedAt: new Date().toISOString(),
-      data: {
-        a1: window.localStorage.getItem(getStorageKey("a1")),
-        a2: window.localStorage.getItem(getStorageKey("a2")),
-        b1: window.localStorage.getItem(getStorageKey("b1")),
-      },
-    };
+    window.localStorage.removeItem("daily-goal");
+    window.localStorage.removeItem("auto-speak");
+    window.localStorage.removeItem("speech-rate");
 
-    try {
-      await window.navigator.clipboard.writeText(JSON.stringify(backup, null, 2));
-      setMessage("已复制本地学习数据备份。");
-    } catch {
-      setMessage("复制失败，浏览器可能没有授权剪贴板访问。");
-    }
+    setSettings(defaultSettings);
+    setMessage("所有本地数据已重置");
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
-      <section className="mx-auto flex max-w-5xl flex-col gap-8">
-        <div>
-          <a href="/" className="text-sm text-emerald-300 hover:text-emerald-200">
-            ← 返回首页
-          </a>
+    <main className="page-shell">
+      <nav className="top-nav">
+        <Link href="/" className="logo">
+          <span className="logo-mark">西</span>
+          <span>Spanish Vocab</span>
+        </Link>
 
-          <p className="mt-8 text-sm font-semibold uppercase tracking-[0.3em] text-emerald-300">
-            Settings
-          </p>
-
-          <h1 className="mt-3 text-4xl font-bold">数据管理</h1>
-
-          <p className="mt-3 max-w-2xl text-slate-400">
-            当前学习数据保存在浏览器 LocalStorage 中。这里可以查看、备份或清空本地进度。
-          </p>
+        <div className="nav-links">
+          <Link href="/" className="nav-link">
+            首页
+          </Link>
+          <Link href="/study" className="nav-link">
+            继续学习
+          </Link>
+          <Link href="/mistakes" className="nav-link">
+            错题本
+          </Link>
         </div>
+      </nav>
 
-        <section className="grid gap-4 md:grid-cols-4">
-          <div className="rounded-2xl border border-white/10 bg-white/10 p-5 shadow-xl backdrop-blur-3xl">
-            <p className="text-sm text-slate-400">总复习</p>
-            <p className="mt-2 text-4xl font-bold">{summary.totalReviews}</p>
-          </div>
+      <section className="settings-hero glass-card">
+        <p className="eyebrow">Preferences</p>
+        <h1 className="section-title">学习设置</h1>
+        <p className="section-desc">
+          调整每日学习目标、发音播放和本地学习数据。当前数据保存在浏览器本地。
+        </p>
+      </section>
 
-          <div className="rounded-2xl border border-white/10 bg-white/10 p-5 shadow-xl backdrop-blur-3xl">
-            <p className="text-sm text-slate-400">今日复习</p>
-            <p className="mt-2 text-4xl font-bold">{summary.todayReviews}</p>
-          </div>
+      <section className="settings-grid">
+        <article className="settings-panel glass-card">
+          <h2>学习偏好</h2>
 
-          <div className="rounded-2xl border border-white/10 bg-white/10 p-5 shadow-xl backdrop-blur-3xl">
-            <p className="text-sm text-slate-400">已掌握</p>
-            <p className="mt-2 text-4xl font-bold">{summary.masteredWords}</p>
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-white/10 p-5 shadow-xl backdrop-blur-3xl">
-            <p className="text-sm text-slate-400">错题数</p>
-            <p className="mt-2 text-4xl font-bold">{summary.mistakeWords}</p>
-          </div>
-        </section>
-
-        <section className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-3xl">
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <div className="setting-row">
             <div>
-              <h2 className="text-2xl font-bold">词书数据</h2>
-              <p className="mt-2 text-slate-400">
-                每个词书的数据独立保存，可以单独清空。
-              </p>
+              <strong>每日目标</strong>
+              <span>建议保持轻量，避免一开始目标过高。</span>
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <button onClick={refreshStats} className={neutralButton}>
-                刷新数据
-              </button>
+            <select
+              value={settings.dailyGoal}
+              onChange={(event) =>
+                updateSetting("dailyGoal", Number(event.target.value))
+              }
+            >
+              <option value={10}>10 个单词</option>
+              <option value={20}>20 个单词</option>
+              <option value={30}>30 个单词</option>
+              <option value={50}>50 个单词</option>
+            </select>
+          </div>
 
-              <button onClick={copyBackup} className={neutralButton}>
-                复制备份
-              </button>
-
-              <button onClick={resetAll} className={dangerButton}>
-                清空全部
-              </button>
+          <div className="setting-row">
+            <div>
+              <strong>自动播放发音</strong>
+              <span>进入新单词时自动播放一次西语发音。</span>
             </div>
+
+            <button
+              type="button"
+              className={settings.autoSpeak ? "toggle is-on" : "toggle"}
+              onClick={() => updateSetting("autoSpeak", !settings.autoSpeak)}
+            >
+              {settings.autoSpeak ? "已开启" : "已关闭"}
+            </button>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
-            {decks.map((deck) => {
-              const stats = statsMap[deck.level];
-              const studiedCount = countStudiedWords(stats);
-              const mistakeCount = countMistakes(stats);
-              const dueCount = countDueWords(stats);
+          <div className="setting-row setting-row-stack">
+            <div>
+              <strong>发音语速</strong>
+              <span>当前语速：{settings.speechRate.toFixed(2)}x</span>
+            </div>
 
-              return (
-                <article
-                  key={deck.level}
-                  className="rounded-2xl border border-white/10 bg-black/20 p-5 backdrop-blur-3xl"
-                >
-                  <span className="rounded-full bg-emerald-100/70 px-3 py-1 text-sm font-bold text-emerald-950">
-                    {deck.label}
-                  </span>
-
-                  <h3 className="mt-4 text-xl font-bold">{deck.title}</h3>
-
-                  <div className="mt-5 grid gap-3 text-sm">
-                    <div className="flex items-center justify-between rounded-xl bg-white/10 px-4 py-3">
-                      <span className="text-slate-400">总复习</span>
-                      <span className="font-semibold">
-                        {stats.totalReviews ?? 0}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between rounded-xl bg-white/10 px-4 py-3">
-                      <span className="text-slate-400">今日复习</span>
-                      <span className="font-semibold">
-                        {stats.todayReviews ?? 0}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between rounded-xl bg-white/10 px-4 py-3">
-                      <span className="text-slate-400">已学习词数</span>
-                      <span className="font-semibold">{studiedCount}</span>
-                    </div>
-
-                    <div className="flex items-center justify-between rounded-xl bg-white/10 px-4 py-3">
-                      <span className="text-slate-400">已掌握</span>
-                      <span className="font-semibold">
-                        {stats.masteredWords?.length ?? 0}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between rounded-xl bg-white/10 px-4 py-3">
-                      <span className="text-slate-400">错题</span>
-                      <span className="font-semibold">{mistakeCount}</span>
-                    </div>
-
-                    <div className="flex items-center justify-between rounded-xl bg-white/10 px-4 py-3">
-                      <span className="text-slate-400">已到期复习</span>
-                      <span className="font-semibold">{dueCount}</span>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 flex flex-wrap gap-3">
-                    <a href={`/study/${deck.level}`} className={neutralButton}>
-                      去学习
-                    </a>
-
-                    <button
-                      onClick={() => resetLevel(deck.level)}
-                      className={dangerButton}
-                    >
-                      清空
-                    </button>
-                  </div>
-                </article>
-              );
-            })}
+            <input
+              type="range"
+              min="0.6"
+              max="1.2"
+              step="0.02"
+              value={settings.speechRate}
+              onChange={(event) =>
+                updateSetting("speechRate", Number(event.target.value))
+              }
+            />
           </div>
-        </section>
+        </article>
 
-        {message && (
-          <p className="rounded-2xl border border-emerald-200/20 bg-emerald-100/20 p-4 font-semibold text-emerald-100 backdrop-blur-3xl">
-            {message}
+        <article className="settings-panel glass-card">
+          <h2>数据管理</h2>
+
+          <p className="settings-note">
+            这些数据目前保存在浏览器 localStorage 中。换浏览器或清理浏览器数据后，
+            学习记录可能会丢失。
           </p>
-        )}
+
+          <div className="settings-actions">
+            <button type="button" onClick={clearMistakes}>
+              清空错题本
+            </button>
+
+            <button type="button" onClick={clearStats}>
+              清空学习统计
+            </button>
+
+            <button type="button" className="danger-button" onClick={resetAll}>
+              重置全部数据
+            </button>
+          </div>
+
+          {message && <p className="settings-message">{message}</p>}
+        </article>
       </section>
     </main>
   );

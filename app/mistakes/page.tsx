@@ -1,202 +1,186 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { a1Words } from "@/data/a1Words";
-import { a2Words } from "@/data/a2Words";
-import { b1Words } from "@/data/b1Words";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
-type WordProgress = {
-  reviewCount: number;
-  lastRating: string;
-  inMistakeBook: boolean;
+type LevelId = "a1" | "a2" | "b1";
+
+type MistakeItem = {
+  id: string;
+  level: LevelId;
+  word: string;
+  meaning: string;
+  type: string;
+  example: string;
+  translation: string;
+  count: number;
+  createdAt: string;
+  updatedAt: string;
 };
 
-type StudyStats = {
-  totalReviews: number;
-  todayReviews: number;
-  masteredWords: string[];
-  words: Record<string, WordProgress>;
+const levelNames: Record<LevelId, string> = {
+  a1: "A1 基础词汇",
+  a2: "A2 初级词汇",
+  b1: "B1 中级词汇",
 };
 
-const decks = [
-  { level: "a1", label: "A1", words: a1Words },
-  { level: "a2", label: "A2", words: a2Words },
-  { level: "b1", label: "B1", words: b1Words },
-];
-
-function loadStats(level: string): StudyStats {
-  if (typeof window === "undefined") {
-    return {
-      totalReviews: 0,
-      todayReviews: 0,
-      masteredWords: [],
-      words: {},
-    };
-  }
-
-  const saved = window.localStorage.getItem(`spanish-vocab-${level}-progress`);
-
-  if (!saved) {
-    return {
-      totalReviews: 0,
-      todayReviews: 0,
-      masteredWords: [],
-      words: {},
-    };
-  }
+function readMistakes() {
+  if (typeof window === "undefined") return [];
 
   try {
-    return JSON.parse(saved) as StudyStats;
+    const raw = window.localStorage.getItem("mistakes");
+    if (!raw) return [];
+
+    const parsed = JSON.parse(raw);
+
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
-    return {
-      totalReviews: 0,
-      todayReviews: 0,
-      masteredWords: [],
-      words: {},
-    };
+    return [];
   }
 }
 
+function saveMistakes(mistakes: MistakeItem[]) {
+  window.localStorage.setItem("mistakes", JSON.stringify(mistakes));
+}
+
+function formatDate(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "未知时间";
+  }
+
+  return date.toLocaleDateString("zh-CN", {
+    month: "short",
+    day: "numeric",
+  });
+}
+
 export default function MistakesPage() {
-  const [selectedLevel, setSelectedLevel] = useState("a1");
-  const [statsMap, setStatsMap] = useState<Record<string, StudyStats>>({});
+  const [mistakes, setMistakes] = useState<MistakeItem[]>([]);
 
   useEffect(() => {
-    const nextStatsMap: Record<string, StudyStats> = {};
-
-    for (const deck of decks) {
-      nextStatsMap[deck.level] = loadStats(deck.level);
-    }
-
-    setStatsMap(nextStatsMap);
+    const storedMistakes = readMistakes();
+    setMistakes(storedMistakes);
   }, []);
 
-  const selectedDeck = decks.find((deck) => deck.level === selectedLevel) ?? decks[0];
-  const selectedStats = statsMap[selectedDeck.level];
+  function removeMistake(id: string) {
+    const nextMistakes = mistakes.filter((item) => item.id !== id);
+    setMistakes(nextMistakes);
+    saveMistakes(nextMistakes);
+  }
 
-  const mistakeWords = useMemo(() => {
-    if (!selectedStats) {
-      return [];
-    }
+  function clearMistakes() {
+    const confirmed = window.confirm("确定要清空所有错题吗？");
 
-    return selectedDeck.words.filter((word) => {
-      return selectedStats.words[word.id]?.inMistakeBook;
-    });
-  }, [selectedDeck, selectedStats]);
+    if (!confirmed) return;
+
+    setMistakes([]);
+    window.localStorage.removeItem("mistakes");
+  }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
-      <section className="mx-auto flex max-w-5xl flex-col gap-8">
+    <main className="page-shell">
+      <nav className="top-nav">
+        <Link href="/" className="logo">
+          <span className="logo-mark">西</span>
+          <span>Spanish Vocab</span>
+        </Link>
+
+        <div className="nav-links">
+          <Link href="/" className="nav-link">
+            首页
+          </Link>
+          <Link href="/study" className="nav-link">
+            继续学习
+          </Link>
+        </div>
+      </nav>
+
+      <section className="mistakes-hero glass-card">
         <div>
-          <a href="/" className="text-sm text-emerald-300 hover:text-emerald-200">
-            ← 返回首页
-          </a>
-
-          <p className="mt-8 text-sm font-semibold uppercase tracking-[0.3em] text-emerald-300">
-            Mistake Book
-          </p>
-
-          <h1 className="mt-3 text-4xl font-bold">错题本</h1>
-          <div className="mt-8 flex flex-wrap gap-4">
-  <a
-    href="/mistakes/study"
-    className="rounded-full border border-white/20 bg-white/15 px-6 py-3 font-semibold text-white shadow-xl backdrop-blur-3xl transition hover:scale-105 hover:bg-white/25"
-  >
-    开始错题训练
-  </a>
-
-  <a
-    href="/"
-    className="rounded-full border border-white/20 bg-black/20 px-6 py-3 font-semibold text-white shadow-xl backdrop-blur-3xl transition hover:scale-105 hover:bg-white/10"
-  >
-    返回首页
-  </a>
-</div>
-
-          <p className="mt-3 max-w-2xl text-slate-400">
-            自动收集你选择“忘记”或“困难”的单词。后面我们会把这里接入专项复习。
+          <p className="eyebrow">Mistake Review</p>
+          <h1 className="section-title">错题本</h1>
+          <p className="section-desc">
+            这里会自动收集你在学习时选择“不认识”的单词，
+            帮你优先复习真正薄弱的词汇。
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          {decks.map((deck) => (
-            <button
-              key={deck.level}
-              onClick={() => setSelectedLevel(deck.level)}
-              className={`rounded-full border px-5 py-3 font-semibold shadow-xl backdrop-blur-3xl transition hover:scale-105 ${
-                selectedLevel === deck.level
-                  ? "border-emerald-200/60 bg-emerald-100/70 text-emerald-950"
-                  : "border-white/20 bg-white/10 text-white hover:bg-white/20"
-              }`}
-            >
-              {deck.label}
+        <div className="mistakes-summary">
+          <strong>{mistakes.length}</strong>
+          <span>个错题</span>
+        </div>
+      </section>
+
+      {mistakes.length === 0 ? (
+        <section className="empty-state glass-card">
+          <div className="empty-icon">✓</div>
+          <h2>目前没有错题</h2>
+          <p>
+            去学习页遇到不认识的单词时，点击“不认识”，它就会自动出现在这里。
+          </p>
+
+          <Link href="/study" className="primary-button">
+            开始学习
+          </Link>
+        </section>
+      ) : (
+        <>
+          <div className="mistakes-toolbar">
+            <p>
+              建议先复习出现次数最多、最近更新的错题。错题不是失败记录，
+              它是下一轮记忆的入口。
+            </p>
+
+            <button type="button" onClick={clearMistakes}>
+              清空错题本
             </button>
-          ))}
-        </div>
-
-        <section className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-3xl">
-          <div className="mb-5 flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-2xl font-bold">{selectedDeck.label} 错题</h2>
-              <p className="mt-1 text-sm text-slate-400">
-                共 {mistakeWords.length} 个错题
-              </p>
-            </div>
-
-            <a
-              href={`/study/${selectedDeck.level}`}
-              className="rounded-full border border-white/20 bg-white/10 px-5 py-3 font-semibold text-white shadow-xl backdrop-blur-3xl transition hover:bg-white/20"
-            >
-              返回学习
-            </a>
           </div>
 
-          {mistakeWords.length === 0 ? (
-            <div className="rounded-2xl border border-white/10 bg-black/20 p-8 text-slate-300 backdrop-blur-3xl">
-              当前词书还没有错题。去学习页选择“忘记”或“困难”后，这里会自动出现。
-            </div>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2">
-              {mistakeWords.map((word) => {
-                const progress = selectedStats.words[word.id];
+          <section className="mistake-card-list">
+            {mistakes.map((item) => (
+              <article key={item.id} className="mistake-card glass-card">
+                <div className="mistake-card-main">
+                  <div className="mistake-card-top">
+                    <div>
+                      <p className="level-kicker">
+                        {levelNames[item.level]} · {item.type}
+                      </p>
 
-                return (
-                  <article
-                    key={word.id}
-                    className="rounded-2xl border border-white/10 bg-black/20 p-5 backdrop-blur-3xl"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="text-sm text-slate-400">
-                          {selectedDeck.label} · {word.pos}
-                          {word.gender ? ` · ${word.gender}` : ""}
-                        </p>
-
-                        <h3 className="mt-2 text-3xl font-bold">{word.word}</h3>
-                      </div>
-
-                      <span className="rounded-full bg-rose-100/70 px-3 py-1 text-sm font-semibold text-rose-950">
-                        {progress.lastRating}
-                      </span>
+                      <h2 className="mistake-word">{item.word}</h2>
                     </div>
 
-                    <p className="mt-4 text-xl font-semibold">{word.chinese}</p>
-
-                    <div className="mt-4 rounded-xl bg-white/10 p-4">
-                      <p>{word.exampleEs}</p>
-                      <p className="mt-1 text-sm text-slate-300">{word.exampleZh}</p>
+                    <div className="mistake-count">
+                      <strong>{item.count}</strong>
+                      <span>次</span>
                     </div>
+                  </div>
 
-                    <p className="mt-4 text-sm text-slate-400">
-                      已复习 {progress.reviewCount} 次
-                    </p>
-                  </article>
-                );
-              })}
-            </div>
-          )}
-        </section>
-      </section>
+                  <div className="mistake-meaning">{item.meaning}</div>
+
+                  <p className="mistake-example">{item.example}</p>
+                  <p className="mistake-translation">{item.translation}</p>
+
+                  <div className="mistake-meta">
+                    最近加入：{formatDate(item.updatedAt)}
+                  </div>
+                </div>
+
+                <div className="mistake-card-actions">
+                  <Link href={`/study/${item.level}`} className="primary-button">
+                    复习这个等级
+                  </Link>
+
+                  <button type="button" onClick={() => removeMistake(item.id)}>
+                    移除
+                  </button>
+                </div>
+              </article>
+            ))}
+          </section>
+        </>
+      )}
     </main>
   );
 }

@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Spanish Vocab App
+
+An open-source Spanish vocabulary learning app built with Next.js, TypeScript, and Tailwind CSS.
+
+This project is designed for learners who want a lightweight Spanish vocabulary trainer with local progress tracking, mistake review, pronunciation support, and spaced repetition.
+
+## Features
+
+- A1 / A2 / B1 vocabulary decks
+- Study mode with Spanish words, Chinese meanings, examples, and pronunciation
+- Web Speech API pronunciation support
+- Four review ratings: Forgot, Hard, Good, Easy
+- Simple spaced repetition scheduling
+- Mistake book
+- Dedicated mistake training mode
+- LocalStorage-based progress tracking
+- Data management page for backup and reset
+- Responsive glassmorphism-style interface
+
+## Tech Stack
+
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+- pnpm
 
 ## Getting Started
 
-First, run the development server:
+Install dependencies:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+    pnpm install
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Start the development server:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+    pnpm dev
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Open:
 
-## Learn More
+    http://localhost:3000
 
-To learn more about Next.js, take a look at the following resources:
+Build the project:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+    pnpm build
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project Structure
 
-## Deploy on Vercel
+    app/
+      page.tsx
+      layout.tsx
+      globals.css
+      study/[level]/page.tsx
+      mistakes/page.tsx
+      mistakes/study/page.tsx
+      settings/page.tsx
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+    data/
+      a1Words.ts
+      a2Words.ts
+      b1Words.ts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Data and Learning Notes
+
+The current vocabulary data is a small demo dataset for development and testing.
+
+Future versions may include larger vocabulary sets, CEFR-aligned decks, better example sentences, audio improvements, and a more advanced spaced repetition algorithm.
+
+## Privacy
+
+This app currently stores learning progress in the browser using LocalStorage.
+
+No account system, server database, or cloud sync is included in the current version.
+
+## License
+
+MIT

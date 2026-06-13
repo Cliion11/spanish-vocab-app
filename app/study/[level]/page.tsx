@@ -43,6 +43,41 @@ function readNumber(key: string) {
 function writeNumber(key: string, value: number) {
   window.localStorage.setItem(key, String(value));
 }
+function getDateKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function getYesterdayKey() {
+  const date = new Date();
+  date.setDate(date.getDate() - 1);
+  return getDateKey(date);
+}
+
+function recordStudyStreak() {
+  if (typeof window === "undefined") return;
+
+  const today = getDateKey();
+  const yesterday = getYesterdayKey();
+
+  const lastStudyDate = window.localStorage.getItem("last-study-date");
+  const currentStreak = readNumber("study-streak");
+
+  if (lastStudyDate === today) {
+    return;
+  }
+
+  if (lastStudyDate === yesterday) {
+    writeNumber("study-streak", currentStreak + 1);
+  } else {
+    writeNumber("study-streak", 1);
+  }
+
+  window.localStorage.setItem("last-study-date", today);
+}
 function readDailyGoal(totalWords: number) {
   if (typeof window === "undefined") {
     return Math.min(20, totalWords);

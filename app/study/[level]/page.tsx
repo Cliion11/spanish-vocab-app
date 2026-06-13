@@ -43,6 +43,62 @@ function readNumber(key: string) {
 function writeNumber(key: string, value: number) {
   window.localStorage.setItem(key, String(value));
 }
+function readDailyGoal(totalWords: number) {
+  if (typeof window === "undefined") {
+    return Math.min(20, totalWords);
+  }
+
+  const value = Number(window.localStorage.getItem("daily-goal"));
+
+  const dailyGoal =
+    Number.isFinite(value) && value > 0 ? value : 20;
+
+  return Math.min(dailyGoal, totalWords);
+}
+function getTodayKey() {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function createSeed(text: string) {
+  let hash = 0;
+
+  for (let i = 0; i < text.length; i += 1) {
+    hash = (hash << 5) - hash + text.charCodeAt(i);
+    hash |= 0;
+  }
+
+  return Math.abs(hash) || 1;
+}
+
+function createSeededRandom(seed: number) {
+  let value = seed;
+
+  return function random() {
+    value = (value * 1664525 + 1013904223) % 4294967296;
+    return value / 4294967296;
+  };
+}
+
+function getDailyWords(level: LevelId, allWords: WordItem[]) {
+  const dailyGoal = readDailyGoal(allWords.length);
+  const todayKey = getTodayKey();
+  const seed = createSeed(`${level}-${todayKey}-${dailyGoal}-${allWords.length}`);
+  const random = createSeededRandom(seed);
+
+  return allWords
+    .map((word) => ({
+      word,
+      order: random(),
+    }))
+    .sort((a, b) => a.order - b.order)
+    .slice(0, dailyGoal)
+    .map((item) => item.word);
+}
 
 function speakSpanish(text: string) {
   if (typeof window === "undefined") return;
@@ -120,7 +176,11 @@ export default function StudyLevelPage() {
   const level = Array.isArray(rawLevel) ? rawLevel[0] : rawLevel;
 
   const safeLevel: LevelId = isLevelId(level) ? level : "a1";
-  const words = useMemo(() => wordBank[safeLevel], [safeLevel]);
+const allWords = useMemo(() => wordBank[safeLevel], [safeLevel]);
+
+const words = useMemo(() => {
+  return getDailyWords(safeLevel, allWords);
+}, [safeLevel, allWords]);
 
   const [index, setIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
@@ -301,6 +361,7 @@ export default function StudyLevelPage() {
           <div>
             <p className="eyebrow">Study Session</p>
             <h1>{levelNames[safeLevel]}</h1>
+<p className="daily-session-note">今日随机学习 {words.length} 个词</p>
           </div>
 
           <div className="study-count">

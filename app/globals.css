@@ -1729,3 +1729,13 @@ button:active,
     justify-content: center;
   }
 }
+/* Check-in button on complete page */
+.checkin-button {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 760px) {
+  .checkin-button {
+    grid-column: auto;
+  }
+}

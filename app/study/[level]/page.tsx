@@ -119,10 +119,16 @@ function createSeededRandom(seed: number) {
   };
 }
 
-function getDailyWords(level: LevelId, allWords: WordItem[]) {
-  const dailyGoal = readDailyGoal(allWords.length);
+function getDailyWords(
+  level: LevelId,
+  allWords: WordItem[],
+  dailyGoal: number
+) {
+  const safeDailyGoal = Math.min(dailyGoal, allWords.length);
   const todayKey = getTodayKey();
-  const seed = createSeed(`${level}-${todayKey}-${dailyGoal}-${allWords.length}`);
+  const seed = createSeed(
+    `${level}-${todayKey}-${safeDailyGoal}-${allWords.length}`
+  );
   const random = createSeededRandom(seed);
 
   return allWords
@@ -131,7 +137,7 @@ function getDailyWords(level: LevelId, allWords: WordItem[]) {
       order: random(),
     }))
     .sort((a, b) => a.order - b.order)
-    .slice(0, dailyGoal)
+    .slice(0, safeDailyGoal)
     .map((item) => item.word);
 }
 
@@ -212,11 +218,15 @@ export default function StudyLevelPage() {
 
   const safeLevel: LevelId = isLevelId(level) ? level : "a1";
 const allWords = useMemo(() => wordBank[safeLevel], [safeLevel]);
+const [dailyGoal, setDailyGoal] = useState(20);
+
+useEffect(() => {
+  setDailyGoal(readDailyGoal(allWords.length));
+}, [allWords.length]);
 
 const words = useMemo(() => {
-  return getDailyWords(safeLevel, allWords);
-}, [safeLevel, allWords]);
-
+  return getDailyWords(safeLevel, allWords, dailyGoal);
+}, [safeLevel, allWords, dailyGoal]);
   const [index, setIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [lastFeedback, setLastFeedback] = useState("");
@@ -373,6 +383,20 @@ const words = useMemo(() => {
       unknown: 0,
     });
   }
+  function copyCheckInText() {
+  const streak = readNumber("study-streak");
+
+  const text = `我今天在 Spanish Vocab 完成了 ${words.length} 个西语单词学习，连续学习 ${streak} 天。`;
+
+  navigator.clipboard
+    .writeText(text)
+    .then(() => {
+      setLastFeedback("已复制今日学习打卡文案。");
+    })
+    .catch(() => {
+      setLastFeedback("复制失败，可以手动截图打卡。");
+    });
+}
 
   return (
     <main className="page-shell">
@@ -439,22 +463,28 @@ const words = useMemo(() => {
             </div>
 
             <div className="complete-actions">
-              <button
-                type="button"
-                className="primary-button"
-                onClick={restartSession}
-              >
-                再学一轮
-              </button>
+  <button
+    type="button"
+    className="primary-button checkin-button"
+    onClick={copyCheckInText}
+  >
+    复制打卡文案
+  </button>
 
-              <Link href="/mistakes" className="glass-button">
-                复习错题
-              </Link>
+  <button type="button" onClick={restartSession}>
+    再学一轮
+  </button>
 
-              <Link href="/study" className="glass-button">
-                返回等级
-              </Link>
-            </div>
+  <Link href="/review" className="glass-button">
+    复习错题
+  </Link>
+
+  <Link href="/study" className="glass-button">
+    返回等级
+  </Link>
+</div>
+
+{lastFeedback && <p className="study-feedback">{lastFeedback}</p>}
           </article>
         ) : (
           <article className="word-card study-word-card">

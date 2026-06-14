@@ -60,25 +60,12 @@ export default function Home() {
             {isCompletedToday ? "Today Completed" : "Monet Glass Learning"}
           </p>
 
-          <h1 className="home-title">
-            {isCompletedToday ? (
-              <>
-                今天完成啦，
-                <br />
-                明天继续。
-              </>
-            ) : (
-              <>
-                轻·西语
-              </>
-            )}
-          </h1>
+          <h1 className="home-title">轻·西语</h1>
 
-          <p className="home-subtitle">
-            {isCompletedToday
-              ? "你已经完成了今天的词汇学习。可以去复习错题，也可以继续学习其他等级。"
-              : "用更轻的方式，记住西语单词。每天几分钟，用 DELE 分级词库、发音播放、错题本和轻量复习，慢慢建立你的西班牙语词库。"}
-          </p>
+<p className="home-subtitle">
+  用更轻的方式，记住西语单词。每天几分钟，用 DELE
+  分级词库、发音播放、错题本和轻量复习，慢慢建立你的西班牙语词库。
+</p>
 
           <div className="home-actions">
             <Link href="/study" className="primary-button">

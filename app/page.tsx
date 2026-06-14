@@ -69,9 +69,7 @@ export default function Home() {
               </>
             ) : (
               <>
-                用更轻的方式，
-                <br />
-                记住西语单词。
+                轻·西语
               </>
             )}
           </h1>
@@ -79,7 +77,7 @@ export default function Home() {
           <p className="home-subtitle">
             {isCompletedToday
               ? "你已经完成了今天的词汇学习。可以去复习错题，也可以继续学习其他等级。"
-              : "每天几分钟，用 DELE 分级词库、发音播放、错题本和轻量复习，慢慢建立你的西班牙语词汇量。"}
+              : "用更轻的方式，记住西语单词。每天几分钟，用 DELE 分级词库、发音播放、错题本和轻量复习，慢慢建立你的西班牙语词库。"}
           </p>
 
           <div className="home-actions">

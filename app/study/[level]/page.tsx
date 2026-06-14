@@ -230,6 +230,7 @@ const words = useMemo(() => {
   const [index, setIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [lastFeedback, setLastFeedback] = useState("");
+  const [showCheckInCard, setShowCheckInCard] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [sessionResult, setSessionResult] = useState<SessionResult>({
     known: 0,
@@ -383,19 +384,21 @@ const words = useMemo(() => {
       unknown: 0,
     });
   }
-  function copyCheckInText() {
-  const streak = readNumber("study-streak");
+function openCheckInCard() {
+  setShowCheckInCard(true);
+}
 
-  const text = `我今天在 Spanish Vocab 完成了 ${words.length} 个西语单词学习，连续学习 ${streak} 天。`;
+function closeCheckInCard() {
+  setShowCheckInCard(false);
+}
 
-  navigator.clipboard
-    .writeText(text)
-    .then(() => {
-      setLastFeedback("已复制今日学习打卡文案。");
-    })
-    .catch(() => {
-      setLastFeedback("复制失败，可以手动截图打卡。");
-    });
+function getTodayLabel() {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}.${month}.${day}`;
 }
 
   return (
@@ -464,12 +467,12 @@ const words = useMemo(() => {
 
             <div className="complete-actions">
   <button
-    type="button"
-    className="primary-button checkin-button"
-    onClick={copyCheckInText}
-  >
-    复制打卡文案
-  </button>
+  type="button"
+  className="primary-button checkin-button"
+  onClick={openCheckInCard}
+>
+  打卡
+</button>
 
   <button type="button" onClick={restartSession}>
     再学一轮
@@ -553,6 +556,49 @@ const words = useMemo(() => {
           </article>
         )}
       </section>
+      {showCheckInCard && (
+      <div className="checkin-overlay" onClick={closeCheckInCard}>
+        <div
+          className="checkin-card"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <div className="checkin-card-top">
+            <p className="checkin-date">{getTodayLabel()}</p>
+          </div>
+
+          <h2 className="checkin-brand">EWords</h2>
+
+          <div className="checkin-info">
+            <div className="checkin-info-row">
+              <span className="checkin-info-label">Today</span>
+              <span className="checkin-info-value">{words.length} words</span>
+            </div>
+            <div className="checkin-info-row">
+              <span className="checkin-info-label">Streak</span>
+              <span className="checkin-info-value">
+                {readNumber("study-streak")} days
+              </span>
+            </div>
+
+            <div className="checkin-info-row">
+              <span className="checkin-info-label">Level</span>
+              <span className="checkin-info-value">
+                {levelNames[safeLevel]}
+              </span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="checkin-continue-button"
+            onClick={closeCheckInCard}
+              >
+            <span className="checkin-continue-icon">↗</span>
+            <span>Continue</span>
+          </button>
+        </div>
+      </div>
+    )}
     </main>
   );
 }

@@ -37,7 +37,7 @@ Start the development server:
 
 Open:
 
-    http://localhost:3000
+    https://cllion.xyz
 
 Build the project:
 

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-type LevelId = "a1" | "a2" | "b1";
+type LevelId = "a1" | "a2" | "b1" | "b2" | "c1";
 
 type LevelStats = {
   totalReview: number;
@@ -40,6 +40,18 @@ const levels: LevelItem[] = [
     title: "DELE B1 中级词汇",
     description: "提升阅读和表达能力，进入更完整的语境学习。",
   },
+  {
+    id: "b2",
+    label: "B2",
+    title: "DELE B2 高阶词汇",
+    description: "适合进阶学习，强化抽象表达、观点论述和复杂语境。",
+  },
+  {
+    id: "c1",
+    label: "C1",
+    title: "DELE C1 高级词汇",
+    description: "适合高级表达，提升正式写作、论证和精确表达能力。",
+  },
 ];
 
 const emptyStats: LevelStats = {
@@ -62,6 +74,8 @@ const defaultStats: Record<LevelId, LevelStats> = {
   },
   a2: emptyStats,
   b1: emptyStats,
+  b2: emptyStats,
+  c1: emptyStats,
 };
 
 function readNumber(key: string, fallback: number) {
@@ -101,6 +115,22 @@ export default function StudyPage() {
         mastered: readNumber("b1-mastered", 0),
         mistakes: readNumber("b1-mistakes", 0),
         due: readNumber("b1-due", 0),
+      },
+      b2: {
+        totalReview: readNumber("b2-total-review", 0),
+        todayReview: readNumber("b2-today-review", 0),
+        learned: readNumber("b2-learned", 0),
+        mastered: readNumber("b2-mastered", 0),
+        mistakes: readNumber("b2-mistakes", 0),
+        due: readNumber("b2-due", 0),
+      },
+      c1: {
+        totalReview: readNumber("c1-total-review", 0),
+        todayReview: readNumber("c1-today-review", 0),
+        learned: readNumber("c1-learned", 0),
+        mastered: readNumber("c1-mastered", 0),
+        mistakes: readNumber("c1-mistakes", 0),
+        due: readNumber("c1-due", 0),
       },
     };
 
@@ -154,7 +184,7 @@ export default function StudyPage() {
 
       <section className="level-page-grid">
         {levels.map((level) => {
-          const itemStats = stats[level.id];
+          const itemStats = stats[level.id] ?? emptyStats;
 
           return (
             <article key={level.id} className="level-panel glass-card">

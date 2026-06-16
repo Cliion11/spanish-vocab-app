@@ -127,16 +127,22 @@ export default function MistakesPage() {
         </section>
       ) : (
         <>
-          <div className="mistakes-toolbar">
-            <p>
-              建议先复习出现次数最多、最近更新的错题。错题不是失败记录，
-              它是下一轮记忆的入口。
-            </p>
+         <div className="mistakes-toolbar">
+  <p>
+    建议先复习出现次数最多、最近更新的错题。错题不是失败记录，
+    它是下一轮记忆的入口。
+  </p>
 
-            <button type="button" onClick={clearMistakes}>
-              清空错题本
-            </button>
-          </div>
+  <div className="mistakes-toolbar-actions">
+    <Link href="/review" className="primary-button">
+      开始错题复习
+    </Link>
+
+    <button type="button" onClick={clearMistakes}>
+      清空错题本
+    </button>
+  </div>
+</div>
 
           <section className="mistake-card-list">
             {mistakes.map((item) => (

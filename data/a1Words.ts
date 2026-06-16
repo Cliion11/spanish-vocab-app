@@ -1,7 +1,9 @@
+export type Level = "A1" | "A2" | "B1" | "B2" | "C1";
+
 export type Word = {
   id: string;
   word: string;
-  level: "A1" | "A2" | "B1";
+  level: Level;
   pos: string;
   gender?: "m" | "f";
   chinese: string;

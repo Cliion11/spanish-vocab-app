@@ -19,6 +19,7 @@ const levels = ["a1", "a2", "b1", "b2", "c1"];
 const statKeys = [
   "total-review",
   "today-review",
+  "today-review-date",
   "learned",
   "mastered",
   "mistakes",

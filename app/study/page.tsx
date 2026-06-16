@@ -87,6 +87,27 @@ function readNumber(key: string, fallback: number) {
   return Number.isFinite(numberValue) ? numberValue : fallback;
 }
 
+function getDateKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function readTodayReview(levelId: string) {
+  if (typeof window === "undefined") return 0;
+
+  const today = getDateKey();
+  const dateKey = `${levelId}-today-review-date`;
+
+  if (window.localStorage.getItem(dateKey) !== today) {
+    return 0;
+  }
+
+  return readNumber(`${levelId}-today-review`, 0);
+}
+
 export default function StudyPage() {
   const [stats, setStats] = useState<Record<LevelId, LevelStats>>(defaultStats);
 
@@ -94,7 +115,7 @@ export default function StudyPage() {
     const nextStats: Record<LevelId, LevelStats> = {
       a1: {
         totalReview: readNumber("a1-total-review", defaultStats.a1.totalReview),
-        todayReview: readNumber("a1-today-review", defaultStats.a1.todayReview),
+        todayReview: readTodayReview("a1"),
         learned: readNumber("a1-learned", defaultStats.a1.learned),
         mastered: readNumber("a1-mastered", defaultStats.a1.mastered),
         mistakes: readNumber("a1-mistakes", defaultStats.a1.mistakes),
@@ -102,7 +123,7 @@ export default function StudyPage() {
       },
       a2: {
         totalReview: readNumber("a2-total-review", 0),
-        todayReview: readNumber("a2-today-review", 0),
+        todayReview: readTodayReview("a2"),
         learned: readNumber("a2-learned", 0),
         mastered: readNumber("a2-mastered", 0),
         mistakes: readNumber("a2-mistakes", 0),
@@ -110,7 +131,7 @@ export default function StudyPage() {
       },
       b1: {
         totalReview: readNumber("b1-total-review", 0),
-        todayReview: readNumber("b1-today-review", 0),
+        todayReview: readTodayReview("b1"),
         learned: readNumber("b1-learned", 0),
         mastered: readNumber("b1-mastered", 0),
         mistakes: readNumber("b1-mistakes", 0),
@@ -118,7 +139,7 @@ export default function StudyPage() {
       },
       b2: {
         totalReview: readNumber("b2-total-review", 0),
-        todayReview: readNumber("b2-today-review", 0),
+        todayReview: readTodayReview("b2"),
         learned: readNumber("b2-learned", 0),
         mastered: readNumber("b2-mastered", 0),
         mistakes: readNumber("b2-mistakes", 0),
@@ -126,7 +147,7 @@ export default function StudyPage() {
       },
       c1: {
         totalReview: readNumber("c1-total-review", 0),
-        todayReview: readNumber("c1-today-review", 0),
+        todayReview: readTodayReview("c1"),
         learned: readNumber("c1-learned", 0),
         mastered: readNumber("c1-mastered", 0),
         mistakes: readNumber("c1-mistakes", 0),
@@ -141,6 +162,7 @@ export default function StudyPage() {
     const keys = [
       `${levelId}-total-review`,
       `${levelId}-today-review`,
+      `${levelId}-today-review-date`,
       `${levelId}-learned`,
       `${levelId}-mastered`,
       `${levelId}-mistakes`,

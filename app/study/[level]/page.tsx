@@ -354,6 +354,14 @@ const words = useMemo(() => {
   function handleAnswer(result: "known" | "unclear" | "unknown") {
     const totalReviewKey = `${safeLevel}-total-review`;
     const todayReviewKey = `${safeLevel}-today-review`;
+    const todayReviewDateKey = `${safeLevel}-today-review-date`;
+    const todayKey = getDateKey();
+
+    if (window.localStorage.getItem(todayReviewDateKey) !== todayKey) {
+      writeNumber(todayReviewKey, 0);
+      window.localStorage.setItem(todayReviewDateKey, todayKey);
+    }
+
     const learnedKey = `${safeLevel}-learned`;
     const masteredKey = `${safeLevel}-mastered`;
     const mistakesKey = `${safeLevel}-mistakes`;

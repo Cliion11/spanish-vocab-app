@@ -122,23 +122,44 @@ function createSeededRandom(seed: number) {
 function getDailyWords(
   level: LevelId,
   allWords: WordItem[],
-  dailyGoal: number
+  dailyGoal: number,
+  sessionRound: number
 ) {
   const safeDailyGoal = Math.min(dailyGoal, allWords.length);
-  const todayKey = getTodayKey();
-  const seed = createSeed(
-    `${level}-${todayKey}-${safeDailyGoal}-${allWords.length}`
+
+  if (safeDailyGoal <= 0) {
+    return [];
+  }
+
+  const cycleIndex = Math.floor(
+    (sessionRound * safeDailyGoal) / Math.max(allWords.length, 1)
   );
+
+  const seed = createSeed(
+    `${level}-${safeDailyGoal}-${allWords.length}-cycle-${cycleIndex}`
+  );
+
   const random = createSeededRandom(seed);
 
-  return allWords
+  const shuffledWords = allWords
     .map((word) => ({
       word,
       order: random(),
     }))
     .sort((a, b) => a.order - b.order)
-    .slice(0, safeDailyGoal)
     .map((item) => item.word);
+
+  const startIndex = (sessionRound * safeDailyGoal) % allWords.length;
+  const endIndex = startIndex + safeDailyGoal;
+
+  if (endIndex <= shuffledWords.length) {
+    return shuffledWords.slice(startIndex, endIndex);
+  }
+
+  return [
+    ...shuffledWords.slice(startIndex),
+    ...shuffledWords.slice(0, endIndex - shuffledWords.length),
+  ];
 }
 
 function speakSpanish(text: string) {
@@ -219,14 +240,15 @@ export default function StudyLevelPage() {
   const safeLevel: LevelId = isLevelId(level) ? level : "a1";
 const allWords = useMemo(() => wordBank[safeLevel], [safeLevel]);
 const [dailyGoal, setDailyGoal] = useState(20);
+const [sessionRound, setSessionRound] = useState(0);
 
 useEffect(() => {
   setDailyGoal(readDailyGoal(allWords.length));
 }, [allWords.length]);
 
 const words = useMemo(() => {
-  return getDailyWords(safeLevel, allWords, dailyGoal);
-}, [safeLevel, allWords, dailyGoal]);
+  return getDailyWords(safeLevel, allWords, dailyGoal, sessionRound);
+}, [safeLevel, allWords, dailyGoal, sessionRound]);
   const [index, setIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [lastFeedback, setLastFeedback] = useState("");
@@ -237,6 +259,14 @@ const words = useMemo(() => {
     unclear: 0,
     unknown: 0,
   });
+
+  useEffect(() => {
+    setSessionRound(readNumber(`${safeLevel}-study-round`));
+    setIndex(0);
+    setShowAnswer(false);
+    setIsCompleted(false);
+    setLastFeedback("");
+  }, [safeLevel]);
 
   const currentWord = words[index];
   const progress = isCompleted
@@ -374,6 +404,10 @@ const words = useMemo(() => {
   }
 
   function restartSession() {
+    const nextRound = sessionRound + 1;
+
+    writeNumber(`${safeLevel}-study-round`, nextRound);
+    setSessionRound(nextRound);
     setIndex(0);
     setShowAnswer(false);
     setLastFeedback("");

@@ -1,4 +1,7 @@
-export type LevelId = "a1" | "a2" | "b1";
+import { b2Words } from "../data/b2Words";
+import { c1Words } from "../data/c1Words";
+
+export type LevelId = "a1" | "a2" | "b1" | "b2" | "c1";
 
 export type WordItem = {
   word: string;
@@ -8,10 +11,30 @@ export type WordItem = {
   translation: string;
 };
 
+function toWordItems(
+  words: Array<{
+    word: string;
+    chinese: string;
+    pos: string;
+    exampleEs: string;
+    exampleZh: string;
+  }>,
+): WordItem[] {
+  return words.map((item) => ({
+    word: item.word,
+    meaning: item.chinese,
+    type: item.pos,
+    example: item.exampleEs,
+    translation: item.exampleZh,
+  }));
+}
+
 export const levelNames: Record<LevelId, string> = {
   a1: "DELE A1 基础词汇",
   a2: "DELE A2 初级词汇",
   b1: "DELE B1 中级词汇",
+  b2: "DELE B2 高阶词汇",
+  c1: "DELE C1 高级词汇",
 };
 
 export const wordBank: Record<LevelId, WordItem[]> = {
@@ -1703,4 +1726,6 @@ export const wordBank: Record<LevelId, WordItem[]> = {
       translation: "这是一个常见错误。",
     },
   ],
+  b2: toWordItems(b2Words),
+  c1: toWordItems(c1Words)
 };

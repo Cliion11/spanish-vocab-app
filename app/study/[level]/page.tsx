@@ -28,7 +28,7 @@ type SessionResult = {
 
 
 function isLevelId(value: unknown): value is LevelId {
-  return value === "a1" || value === "a2" || value === "b1";
+  return value === "a1" || value === "a2" || value === "b1" || value === "b2" || value === "c1";
 }
 
 function readNumber(key: string) {

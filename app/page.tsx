@@ -36,8 +36,17 @@ export default function Home() {
         </Link>
 
        <div className="nav-links">
+
+  <Link href="/mistakes" className="nav-link">
+    错题本
+  </Link>
+
   <Link href="/pronunciation" className="nav-link">
     西语发音表
+  </Link>
+
+  <Link href="/settings" className="nav-link">
+    设置
   </Link>
 </div>
       </nav>

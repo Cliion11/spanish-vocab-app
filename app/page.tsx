@@ -35,23 +35,11 @@ export default function Home() {
           <span>Spanish Vocab</span>
         </Link>
 
-        <div className="nav-links">
-          <Link href="/study" className="nav-link">
-            开始学习
-          </Link>
-
-          <Link href="/mistakes" className="nav-link">
-            错题本
-          </Link>
-
-          <Link href="/review" className="nav-link">
-            错题复习
-          </Link>
-
-          <Link href="/settings" className="nav-link">
-            设置
-          </Link>
-        </div>
+       <div className="nav-links">
+  <Link href="/pronunciation" className="nav-link">
+    西语发音表
+  </Link>
+</div>
       </nav>
 
       <section className="home-center">

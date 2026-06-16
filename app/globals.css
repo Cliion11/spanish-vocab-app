@@ -3,6 +3,7 @@
 }
 
 :root {
+
   --bg-cream: #f8f3ea;
   --bg-blue: #e7eef7;
   --bg-green: #e8f0e7;
@@ -11,6 +12,9 @@
   --text-main: #2f3542;
   --text-soft: #6f7685;
   --text-light: #8a91a0;
+  --text-main: #303442;
+  --text-soft: #6f7787;
+  --text-light: #8b94a5;
 
   --glass-bg: rgba(255, 255, 255, 0.58);
   --glass-bg-strong: rgba(255, 255, 255, 0.72);
@@ -90,7 +94,7 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 42px;
+  margin-bottom: 35px;
 }
 
 .logo {
@@ -1989,5 +1993,77 @@ button:active,
 
   .checkin-info-value {
     font-size: 16px !important;
+  }
+}
+/* Mobile navigation fix */
+header:has(.nav-links),
+nav:has(.nav-links) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  overflow: visible;
+}
+
+.nav-links {
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
+  overflow: visible;
+}
+
+.nav-link {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  header:has(.nav-links),
+  nav:has(.nav-links) {
+    align-items: flex-start;
+  }
+
+  .nav-links {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .nav-link {
+    font-size: 13px;
+    padding: 9px 12px;
+  }
+}
+/* Force show desktop nav links on small screens */
+@media (max-width: 900px) {
+  .top-nav .nav-links {
+    display: flex !important;
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    overflow: visible;
+  }
+
+  .top-nav .nav-link {
+    display: inline-flex !important;
+    flex: 0 0 auto;
+    white-space: nowrap;
+    font-size: 13px;
+    padding: 9px 12px;
+  }
+
+  .top-nav {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    overflow: visible;
   }
 }

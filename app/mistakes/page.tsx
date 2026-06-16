@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-type LevelId = "a1" | "a2" | "b1";
+type LevelId = "a1" | "a2" | "b1" | "b2" | "c1";
 
 type MistakeItem = {
   id: string;
@@ -22,6 +22,8 @@ const levelNames: Record<LevelId, string> = {
   a1: "A1 基础词汇",
   a2: "A2 初级词汇",
   b1: "B1 中级词汇",
+  b2: "B2 高阶词汇",
+  c1: "C1 高级词汇",
 };
 
 function readMistakes() {

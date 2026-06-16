@@ -15,7 +15,7 @@ const defaultSettings: SettingsState = {
   speechRate: 0.82,
 };
 
-const levels = ["a1", "a2", "b1"];
+const levels = ["a1", "a2", "b1", "b2", "c1"];
 const statKeys = [
   "total-review",
   "today-review",

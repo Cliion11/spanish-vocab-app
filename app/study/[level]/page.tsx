@@ -401,21 +401,23 @@ const words = useMemo(() => {
     }
 
     if (index + 1 >= words.length) {
-  recordStudyStreak();
-  setIsCompleted(true);
-  setShowAnswer(false);
-  return;
-}
+      const nextRound = sessionRound + 1;
+
+      writeNumber(`${safeLevel}-study-round`, nextRound);
+      recordStudyStreak();
+      setIsCompleted(true);
+      setShowAnswer(false);
+      return;
+    }
 
     setIndex(index + 1);
     setShowAnswer(false);
   }
 
   function restartSession() {
-    const nextRound = sessionRound + 1;
+    const savedRound = readNumber(`${safeLevel}-study-round`);
 
-    writeNumber(`${safeLevel}-study-round`, nextRound);
-    setSessionRound(nextRound);
+    setSessionRound(savedRound);
     setIndex(0);
     setShowAnswer(false);
     setLastFeedback("");

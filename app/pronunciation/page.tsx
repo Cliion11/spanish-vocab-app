@@ -2,28 +2,11 @@
 
 import type { CSSProperties } from "react";
 import Link from "next/link";
+import { speakSpanish } from "@/lib/speech";
 import {
   spanishAlphabet,
   spanishPronunciationRules,
 } from "@/data/spanishPronunciation";
-
-function speakSpanish(text: string) {
-  if (typeof window === "undefined") return;
-
-  if (!("speechSynthesis" in window)) {
-    alert("当前浏览器不支持语音播放。");
-    return;
-  }
-
-  window.speechSynthesis.cancel();
-
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "es-ES";
-  utterance.rate = 0.82;
-  utterance.pitch = 1;
-
-  window.speechSynthesis.speak(utterance);
-}
 
 const pronunciationSections = [
   {

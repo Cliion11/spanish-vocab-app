@@ -1,5 +1,6 @@
 "use client";
 
+import { speakSpanish } from "@/lib/speech";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -42,33 +43,6 @@ function readMistakes(): MistakeItem[] {
 
 function saveMistakes(mistakes: MistakeItem[]) {
   window.localStorage.setItem("mistakes", JSON.stringify(mistakes));
-}
-
-function speakSpanish(text: string) {
-  if (typeof window === "undefined") return;
-  if (!("speechSynthesis" in window)) return;
-
-  const utterance = new SpeechSynthesisUtterance(text);
-  const storedRate = Number(window.localStorage.getItem("speech-rate"));
-
-  utterance.lang = "es-ES";
-  utterance.rate =
-    Number.isFinite(storedRate) && storedRate >= 0.6 && storedRate <= 1.2
-      ? storedRate
-      : 0.82;
-  utterance.pitch = 1;
-
-  const voices = window.speechSynthesis.getVoices();
-  const spanishVoice = voices.find((voice) =>
-    voice.lang.toLowerCase().startsWith("es")
-  );
-
-  if (spanishVoice) {
-    utterance.voice = spanishVoice;
-  }
-
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(utterance);
 }
 
 export default function ReviewPage() {

@@ -302,7 +302,7 @@ const words = useMemo(() => {
 
     if (key === "1") {
       event.preventDefault();
-      handleAnswer("unknown");
+      handleAnswer("known");
       return;
     }
 
@@ -314,7 +314,7 @@ const words = useMemo(() => {
 
     if (key === "3") {
       event.preventDefault();
-      handleAnswer("known");
+      handleAnswer("unknown");
     }
   }
 

@@ -59,7 +59,7 @@ export default function AccountPage() {
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
         options: {
-          emailRedirectTo: `${window.location.origin}/account`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/account`,
         },
       });
 

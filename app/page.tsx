@@ -29,6 +29,7 @@ export default function Home() {
 
   return (
     <main className="page-shell home-shell">
+
       <nav className="top-nav">
         <Link href="/" className="logo">
           <span className="logo-mark">E</span>
@@ -37,12 +38,13 @@ export default function Home() {
 
        <div className="nav-links">
 
-  <Link href="/mistakes" className="nav-link">
-    错题本
-  </Link>
 
   <Link href="/pronunciation" className="nav-link">
     西语发音表
+  </Link>
+
+  <Link href="/account" className="nav-link">
+    账户同步
   </Link>
 
   <Link href="/settings" className="nav-link">
